@@ -1,6 +1,13 @@
 const checkEnvVariables = require("./check-env-variables")
+const { initOpenNextCloudflareForDev } = require("@opennextjs/cloudflare")
+
+// Initialize OpenNext Cloudflare integration for local development
+// This is a no-op in production builds
+initOpenNextCloudflareForDev()
 
 checkEnvVariables()
+
+console.log(`[build] MEDUSA_BACKEND_URL=${process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"}`)
 
 /**
  * Medusa Cloud-related environment variables
@@ -25,6 +32,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "http",
