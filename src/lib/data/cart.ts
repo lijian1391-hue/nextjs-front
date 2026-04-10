@@ -339,7 +339,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     if (!formData) {
       throw new Error("No form data found when setting addresses")
     }
-    const cartId = getCartId()
+    const cartId = await getCartId()
     if (!cartId) {
       throw new Error("No existing cart found when setting addresses")
     }
@@ -347,14 +347,14 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     const data = {
       shipping_address: {
         first_name: formData.get("shipping_address.first_name"),
-        last_name: formData.get("shipping_address.last_name"),
+        last_name: formData.get("shipping_address.last_name") || "",
         address_1: formData.get("shipping_address.address_1"),
         address_2: "",
         company: formData.get("shipping_address.company"),
-        postal_code: formData.get("shipping_address.postal_code"),
+        postal_code: formData.get("shipping_address.postal_code") || "000000",
         city: formData.get("shipping_address.city"),
         country_code: formData.get("shipping_address.country_code"),
-        province: formData.get("shipping_address.province"),
+        province: formData.get("shipping_address.province") || "",
         phone: formData.get("shipping_address.phone"),
       },
       email: formData.get("email"),
@@ -377,13 +377,43 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
         phone: formData.get("billing_address.phone"),
       }
     await updateCart(data)
+
+    // Auto-select shipping method if none selected
+    const cart = await retrieveCart(cartId)
+    if (cart && (cart.shipping_methods?.length ?? 0) === 0) {
+      const { listCartShippingMethods } = await import("./fulfillment")
+      const shippingOptions = await listCartShippingMethods(cartId)
+      const firstOption = shippingOptions?.find(
+        (sm) => sm.service_zone?.fulfillment_set?.type !== "pickup"
+      ) || shippingOptions?.[0]
+
+      if (firstOption) {
+        await setShippingMethod({ cartId, shippingMethodId: firstOption.id })
+      }
+    }
+
+    // Auto-initiate payment if no active session
+    const updatedCart = await retrieveCart(cartId)
+    if (updatedCart) {
+      const activeSession = updatedCart.payment_collection?.payment_sessions?.find(
+        (s: any) => s.status === "pending"
+      )
+      if (!activeSession) {
+        const { listCartPaymentMethods } = await import("./payment")
+        const paymentMethods = await listCartPaymentMethods(updatedCart.region?.id ?? "")
+        if (paymentMethods?.length) {
+          await initiatePaymentSession(updatedCart, {
+            provider_id: paymentMethods[0].id,
+          })
+        }
+      }
+    }
+
+    // Place order
+    await placeOrder(cartId)
   } catch (e: any) {
     return e.message
   }
-
-  redirect(
-    `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`
-  )
 }
 
 /**
