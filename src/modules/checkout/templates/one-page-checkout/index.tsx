@@ -1,17 +1,16 @@
 "use client"
 
-import { initiatePaymentSession, placeOrder, setShippingMethod } from "@lib/data/cart"
+import { initiatePaymentSession, setShippingMethod } from "@lib/data/cart"
+import { paymentInfoMap } from "@lib/constants"
 import { HttpTypes } from "@medusajs/types"
-import { Button, Heading, Text } from "@medusajs/ui"
+import { Heading, Text } from "@medusajs/ui"
 import CartTotals from "@modules/common/components/cart-totals"
 import Divider from "@modules/common/components/divider"
 import ErrorMessage from "@modules/checkout/components/error-message"
-import DiscountCode from "@modules/checkout/components/discount-code"
 import ItemsPreviewTemplate from "@modules/cart/templates/preview"
 import ShippingAddress from "@modules/checkout/components/shipping-address"
 import { setAddresses } from "@lib/data/cart"
-import { useActionState, useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useActionState, useEffect, useMemo, useState } from "react"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 
 type OnePageCheckoutProps = {
@@ -27,17 +26,22 @@ export default function OnePageCheckout({
   availableShippingMethods,
   availablePaymentMethods,
 }: OnePageCheckoutProps) {
-  const router = useRouter()
-  const countryCode = useParams().countryCode as string
   const [message, formAction] = useActionState(setAddresses, null)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+
+  // Determine active payment info
+  const activePaymentSession = cart.payment_collection?.payment_sessions?.find(
+    (s: any) => s.status === "pending"
+  )
+  const paymentTitle = activePaymentSession
+    ? paymentInfoMap[activePaymentSession.provider_id]?.title || activePaymentSession.provider_id
+    : availablePaymentMethods?.length
+    ? paymentInfoMap[availablePaymentMethods[0].id]?.title || availablePaymentMethods[0].id
+    : "Not available"
 
   // Auto-select shipping method and payment on mount
   useEffect(() => {
     const autoSelect = async () => {
       try {
-        // Auto-select first shipping method if none selected
         if (
           availableShippingMethods?.length &&
           (cart.shipping_methods?.length ?? 0) === 0
@@ -54,7 +58,6 @@ export default function OnePageCheckout({
           }
         }
 
-        // Auto-select first payment method if none active
         const activeSession = cart.payment_collection?.payment_sessions?.find(
           (s: any) => s.status === "pending"
         )
@@ -80,9 +83,6 @@ export default function OnePageCheckout({
           Order Summary
         </Heading>
         <ItemsPreviewTemplate cart={cart} />
-        <div className="my-4">
-          <DiscountCode cart={cart} />
-        </div>
         <Divider />
       </div>
 
@@ -102,10 +102,7 @@ export default function OnePageCheckout({
       </div>
 
       {/* 3. Address form */}
-      <form
-        action={formAction}
-        onSubmit={() => setSubmitting(true)}
-      >
+      <form action={formAction}>
         <input type="hidden" name="same_as_billing" value="on" />
         <input type="hidden" name="email" value={`${cart.id}@checkout.placeholder`} />
 
@@ -122,12 +119,18 @@ export default function OnePageCheckout({
 
         <Divider className="my-6" />
 
-        {/* 4. Order totals */}
+        {/* 4. Order totals + payment method */}
         <div>
           <Heading level="h3" className="text-xl-regular mb-4">
             Order Total
           </Heading>
           <CartTotals totals={cart} />
+          <div className="flex items-center justify-between mt-4 txt-medium text-ui-fg-subtle">
+            <span>Payment Method</span>
+            <span className="text-ui-fg-base" data-testid="payment-method-display">
+              {paymentTitle}
+            </span>
+          </div>
         </div>
 
         <Divider className="my-6" />
@@ -141,7 +144,7 @@ export default function OnePageCheckout({
             Confirm Order
           </SubmitButton>
           <ErrorMessage
-            error={message || error}
+            error={message}
             data-testid="checkout-error-message"
           />
         </div>

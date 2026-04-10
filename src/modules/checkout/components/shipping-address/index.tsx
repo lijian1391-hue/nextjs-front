@@ -1,7 +1,20 @@
 import { HttpTypes } from "@medusajs/types"
 import Input from "@modules/common/components/input"
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useState } from "react"
 import CountrySelect from "../country-select"
+
+// Nigerian states
+const NG_STATES = [
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
+  "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu",
+  "FCT - Abuja", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina",
+  "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo",
+  "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
+]
+
+const COUNTRY_STATES: Record<string, string[]> = {
+  ng: NG_STATES,
+}
 
 const ShippingAddress = ({
   customer,
@@ -58,89 +71,154 @@ const ShippingAddress = ({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
+    const { name, value } = e.target
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value }
+      // Reset province when country changes
+      if (name === "shipping_address.country_code") {
+        updated["shipping_address.province"] = ""
+      }
+      return updated
     })
   }
 
+  const countryCode = formData["shipping_address.country_code"]?.toLowerCase()
+  const states = countryCode ? COUNTRY_STATES[countryCode] || [] : []
+
   return (
-    <div className="flex flex-col gap-y-4">
+    <div className="flex flex-col gap-y-5">
       {/* Country/Region */}
-      <CountrySelect
-        name="shipping_address.country_code"
-        autoComplete="country"
-        region={cart?.region}
-        value={formData["shipping_address.country_code"]}
-        onChange={handleChange}
-        required
-        data-testid="shipping-country-select"
-      />
+      <div>
+        <label className="text-small-semi text-ui-fg-base mb-1 block">
+          Country / Region *
+        </label>
+        <CountrySelect
+          name="shipping_address.country_code"
+          autoComplete="country"
+          region={cart?.region}
+          value={formData["shipping_address.country_code"]}
+          onChange={handleChange}
+          required
+          data-testid="shipping-country-select"
+        />
+      </div>
 
       {/* Full Name */}
-      <Input
-        label="Full Name *"
-        name="shipping_address.first_name"
-        autoComplete="name"
-        value={formData["shipping_address.first_name"]}
-        onChange={handleChange}
-        required
-        data-testid="shipping-full-name-input"
-      />
+      <div>
+        <label className="text-small-semi text-ui-fg-base mb-1 block">
+          Full Name *
+        </label>
+        <Input
+          label="Enter your full name"
+          name="shipping_address.first_name"
+          autoComplete="name"
+          value={formData["shipping_address.first_name"]}
+          onChange={handleChange}
+          required
+          data-testid="shipping-full-name-input"
+        />
+      </div>
 
       {/* Phone Number */}
-      <Input
-        label="Phone Number *"
-        name="shipping_address.phone"
-        autoComplete="tel"
-        value={formData["shipping_address.phone"]}
-        onChange={handleChange}
-        required
-        data-testid="shipping-phone-input"
-      />
+      <div>
+        <label className="text-small-semi text-ui-fg-base mb-1 block">
+          Phone Number *
+        </label>
+        <Input
+          label="Enter your phone number"
+          name="shipping_address.phone"
+          autoComplete="tel"
+          value={formData["shipping_address.phone"]}
+          onChange={handleChange}
+          required
+          data-testid="shipping-phone-input"
+        />
+      </div>
 
       {/* WhatsApp Account */}
-      <Input
-        label="WhatsApp Account"
-        name="shipping_address.company"
-        value={formData["shipping_address.company"]}
-        onChange={handleChange}
-        data-testid="shipping-whatsapp-input"
-      />
+      <div>
+        <label className="text-small-semi text-ui-fg-base mb-1 block">
+          WhatsApp Account
+        </label>
+        <Input
+          label="Enter your WhatsApp number"
+          name="shipping_address.company"
+          value={formData["shipping_address.company"]}
+          onChange={handleChange}
+          data-testid="shipping-whatsapp-input"
+        />
+      </div>
 
-      {/* State / Province */}
-      <Input
-        label="State / Province"
-        name="shipping_address.province"
-        autoComplete="address-level1"
-        value={formData["shipping_address.province"]}
-        onChange={handleChange}
-        data-testid="shipping-province-input"
-      />
+      {/* State / Province - dropdown for known countries, text input otherwise */}
+      <div>
+        <label className="text-small-semi text-ui-fg-base mb-1 block">
+          State
+        </label>
+        {states.length > 0 ? (
+          <div className="relative">
+            <select
+              name="shipping_address.province"
+              value={formData["shipping_address.province"]}
+              onChange={handleChange}
+              data-testid="shipping-state-select"
+              className="w-full appearance-none border border-ui-border-base bg-ui-bg-subtle rounded-md px-4 py-3 text-base-regular outline-none hover:bg-ui-bg-field-hover transition-colors"
+            >
+              <option value="">Select state</option>
+              {states.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
+            </select>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-ui-fg-muted">
+              ▾
+            </span>
+          </div>
+        ) : (
+          <Input
+            label="Enter your state / province"
+            name="shipping_address.province"
+            autoComplete="address-level1"
+            value={formData["shipping_address.province"]}
+            onChange={handleChange}
+            data-testid="shipping-province-input"
+          />
+        )}
+      </div>
 
       {/* Detailed Address */}
-      <Input
-        label="Detailed Address *"
-        name="shipping_address.address_1"
-        autoComplete="address-line1"
-        value={formData["shipping_address.address_1"]}
-        onChange={handleChange}
-        required
-        data-testid="shipping-address-input"
-      />
+      <div>
+        <label className="text-small-semi text-ui-fg-base mb-1 block">
+          Detailed Address *
+        </label>
+        <Input
+          label="Enter your detailed address"
+          name="shipping_address.address_1"
+          autoComplete="address-line1"
+          value={formData["shipping_address.address_1"]}
+          onChange={handleChange}
+          required
+          data-testid="shipping-address-input"
+        />
+      </div>
 
       {/* City */}
-      <Input
-        label="City *"
-        name="shipping_address.city"
-        autoComplete="address-level2"
-        value={formData["shipping_address.city"]}
-        onChange={handleChange}
-        required
-        data-testid="shipping-city-input"
-      />
+      <div>
+        <label className="text-small-semi text-ui-fg-base mb-1 block">
+          City *
+        </label>
+        <Input
+          label="Enter your city"
+          name="shipping_address.city"
+          autoComplete="address-level2"
+          value={formData["shipping_address.city"]}
+          onChange={handleChange}
+          required
+          data-testid="shipping-city-input"
+        />
+      </div>
 
-      {/* Hidden fields for required data */}
+      {/* Hidden fields */}
       <input type="hidden" name="shipping_address.last_name" value="" />
       <input type="hidden" name="shipping_address.postal_code" value="000000" />
     </div>
