@@ -16,6 +16,10 @@ const COUNTRY_STATES: Record<string, string[]> = {
   ng: NG_STATES,
 }
 
+const COUNTRY_CODES: Record<string, string> = {
+  ng: "+234",
+}
+
 const ShippingAddress = ({
   customer,
   cart,
@@ -40,6 +44,7 @@ const ShippingAddress = ({
       "",
     "shipping_address.province": cart?.shipping_address?.province || "",
     "shipping_address.phone": cart?.shipping_address?.phone || "",
+    email: cart?.email || "",
   })
 
   useEffect(() => {
@@ -64,6 +69,7 @@ const ShippingAddress = ({
           cart.shipping_address?.province || "",
         "shipping_address.phone":
           cart.shipping_address?.phone || "",
+        email: cart?.email || "",
       }))
     }
   }, [cart])
@@ -74,7 +80,6 @@ const ShippingAddress = ({
     const { name, value } = e.target
     setFormData((prev) => {
       const updated = { ...prev, [name]: value }
-      // Reset province when country changes
       if (name === "shipping_address.country_code") {
         updated["shipping_address.province"] = ""
       }
@@ -82,8 +87,36 @@ const ShippingAddress = ({
     })
   }
 
+  // Strip country code for display
+  const stripCountryCode = (phone: string, code: string): string => {
+    if (phone.startsWith(code)) return phone.slice(code.length)
+    if (phone.startsWith("0")) return phone.slice(1)
+    return phone
+  }
+
+  // Validate phone: only digits, 7-15 digits
+  const isValidPhone = (value: string): boolean => {
+    const digits = value.replace(/\D/g, "")
+    return digits.length >= 7 && digits.length <= 15
+  }
+
   const countryCode = formData["shipping_address.country_code"]?.toLowerCase()
   const states = countryCode ? COUNTRY_STATES[countryCode] || [] : []
+  const dialCode = COUNTRY_CODES[countryCode] || ""
+
+  // Prepare phone values for display and submission
+  const phoneDisplay = dialCode
+    ? stripCountryCode(formData["shipping_address.phone"] || "", dialCode)
+    : formData["shipping_address.phone"]
+  const whatsappDisplay = dialCode
+    ? stripCountryCode(formData["shipping_address.company"] || "", dialCode)
+    : formData["shipping_address.company"]
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "")
+    const full = dialCode ? `${dialCode}${raw}` : raw
+    setFormData((prev) => ({ ...prev, [e.target.name]: full }))
+  }
 
   return (
     <div className="flex flex-col gap-y-5">
@@ -119,37 +152,72 @@ const ShippingAddress = ({
         />
       </div>
 
-      {/* Phone Number */}
+      {/* Email */}
+      <div>
+        <label className="text-small-semi text-ui-fg-base mb-1 block">
+          Email *
+        </label>
+        <Input
+          label="Enter your email address"
+          name="email"
+          type="email"
+          autoComplete="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          data-testid="shipping-email-input"
+        />
+      </div>
+
+      {/* Phone Number with country code */}
       <div>
         <label className="text-small-semi text-ui-fg-base mb-1 block">
           Phone Number *
         </label>
-        <Input
-          label="Enter your phone number"
-          name="shipping_address.phone"
-          autoComplete="tel"
-          value={formData["shipping_address.phone"]}
-          onChange={handleChange}
-          required
-          data-testid="shipping-phone-input"
-        />
+        <div className="flex items-center gap-x-2">
+          {dialCode && (
+            <div className="flex items-center h-full px-3 py-2.5 bg-ui-bg-subtle border border-ui-border-base rounded-md text-base-regular text-ui-fg-muted whitespace-nowrap">
+              {dialCode}
+            </div>
+          )}
+          <div className="flex-1">
+            <Input
+              label="Enter your phone number"
+              name="shipping_address.phone"
+              autoComplete="tel"
+              value={phoneDisplay}
+              onChange={handlePhoneChange}
+              required
+              data-testid="shipping-phone-input"
+            />
+          </div>
+        </div>
       </div>
 
-      {/* WhatsApp Account */}
+      {/* WhatsApp Account with country code */}
       <div>
         <label className="text-small-semi text-ui-fg-base mb-1 block">
           WhatsApp Account
         </label>
-        <Input
-          label="Enter your WhatsApp number"
-          name="shipping_address.company"
-          value={formData["shipping_address.company"]}
-          onChange={handleChange}
-          data-testid="shipping-whatsapp-input"
-        />
+        <div className="flex items-center gap-x-2">
+          {dialCode && (
+            <div className="flex items-center h-full px-3 py-2.5 bg-ui-bg-subtle border border-ui-border-base rounded-md text-base-regular text-ui-fg-muted whitespace-nowrap">
+              {dialCode}
+            </div>
+          )}
+          <div className="flex-1">
+            <Input
+              label="Enter your WhatsApp number"
+              name="shipping_address.company"
+              value={whatsappDisplay}
+              onChange={handlePhoneChange}
+              data-testid="shipping-whatsapp-input"
+            />
+          </div>
+        </div>
       </div>
 
-      {/* State / Province - dropdown for known countries, text input otherwise */}
+      {/* State / Province */}
       <div>
         <label className="text-small-semi text-ui-fg-base mb-1 block">
           State
@@ -186,22 +254,6 @@ const ShippingAddress = ({
         )}
       </div>
 
-      {/* Detailed Address */}
-      <div>
-        <label className="text-small-semi text-ui-fg-base mb-1 block">
-          Detailed Address *
-        </label>
-        <Input
-          label="Enter your detailed address"
-          name="shipping_address.address_1"
-          autoComplete="address-line1"
-          value={formData["shipping_address.address_1"]}
-          onChange={handleChange}
-          required
-          data-testid="shipping-address-input"
-        />
-      </div>
-
       {/* City */}
       <div>
         <label className="text-small-semi text-ui-fg-base mb-1 block">
@@ -215,6 +267,22 @@ const ShippingAddress = ({
           onChange={handleChange}
           required
           data-testid="shipping-city-input"
+        />
+      </div>
+
+      {/* Detailed Address */}
+      <div>
+        <label className="text-small-semi text-ui-fg-base mb-1 block">
+          Detailed Address *
+        </label>
+        <Input
+          label="Enter your detailed address"
+          name="shipping_address.address_1"
+          autoComplete="address-line1"
+          value={formData["shipping_address.address_1"]}
+          onChange={handleChange}
+          required
+          data-testid="shipping-address-input"
         />
       </div>
 

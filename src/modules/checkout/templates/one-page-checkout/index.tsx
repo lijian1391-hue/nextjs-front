@@ -104,7 +104,6 @@ export default function OnePageCheckout({
       {/* 3. Address form */}
       <form action={formAction}>
         <input type="hidden" name="same_as_billing" value="on" />
-        <input type="hidden" name="email" value={`${cart.id}@checkout.placeholder`} />
 
         <Heading level="h2" className="text-2xl-regular mb-4">
           Delivery Address

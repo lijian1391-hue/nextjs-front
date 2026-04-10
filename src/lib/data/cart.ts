@@ -5,6 +5,7 @@ import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect"
 import {
   getAuthHeaders,
   getCacheOptions,
@@ -412,6 +413,10 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     // Place order
     await placeOrder(cartId)
   } catch (e: any) {
+    // Next.js redirect() throws a special error - must re-throw it
+    if (isRedirectError(e)) {
+      throw e
+    }
     return e.message
   }
 }
