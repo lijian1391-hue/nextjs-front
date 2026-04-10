@@ -27,17 +27,13 @@
       "service": "nextjs-front"
     }
   ],
-  "env": {
-    "production": {
-      "vars": {
-        "MEDUSA_BACKEND_URL": "https://vultr.afrylo.com",
-        "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY": "pk_24926690f60af940d894551c27fda040b7928d315d9410320198a02769f387bc",
-        "NEXT_PUBLIC_BASE_URL": "https://front.afrylo.com",
-        "NEXT_PUBLIC_DEFAULT_REGION": "ng",
-        "REVALIDATE_SECRET": "8f2e9d5a1b7c4e3f9a0d2b6c8e1f5a7d",
-        "MEDUSA_CLOUD_S3_HOSTNAME": "https://images.afrylo.com",
-        "MEDUSA_CLOUD_S3_PATHNAME": "/"
-      }
-    }
+  "vars": {
+    "MEDUSA_BACKEND_URL": "https://vultr.afrylo.com",
+    "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY": "pk_24926690f60af940d894551c27fda040b7928d315d9410320198a02769f387bc",
+    "NEXT_PUBLIC_BASE_URL": "https://front.afrylo.com",
+    "NEXT_PUBLIC_DEFAULT_REGION": "ng",
+    "REVALIDATE_SECRET": "8f2e9d5a1b7c4e3f9a0d2b6c8e1f5a7d",
+    "MEDUSA_CLOUD_S3_HOSTNAME": "https://images.afrylo.com",
+    "MEDUSA_CLOUD_S3_PATHNAME": "/"
   }
 }
