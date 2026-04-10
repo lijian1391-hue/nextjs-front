@@ -110,3 +110,15 @@
     @apply text-[32px] leading-[44px] font-semibold;
   }
 }
+
+/* Swiper pagination bullets */
+.swiper-pagination-bullet {
+  width: 6px;
+  height: 6px;
+  background: #d1d5db;
+  opacity: 1;
+}
+
+.swiper-pagination-bullet-active {
+  background: #111827;
+}
