@@ -114,7 +114,7 @@ export default function ProductActions({
     return false
   }, [selectedVariant])
 
-  // add the selected variant to the cart
+  // add the selected variant to the cart and redirect to checkout
   const handleAddToCart = async () => {
     if (!selectedVariant?.id) return null
 
@@ -125,6 +125,8 @@ export default function ProductActions({
       quantity: 1,
       countryCode,
     })
+
+    router.push(`/${countryCode}/checkout`)
 
     setIsAdding(false)
   }
