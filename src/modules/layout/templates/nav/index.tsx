@@ -28,10 +28,16 @@ export default async function Nav() {
           <div className="flex items-center h-full">
             <LocalizedClientLink
               href="/"
-              className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase"
+              className="txt-compact-xlarge-plus hover:text-ui-fg-base flex items-center gap-x-2"
               data-testid="nav-store-link"
             >
-              Medusa Store
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/favicon.ico"
+                alt="Afrylo"
+                className="w-7 h-7"
+              />
+              <span className="uppercase">Afrylo</span>
             </LocalizedClientLink>
           </div>
 

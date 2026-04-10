@@ -11,10 +11,16 @@ export default function CheckoutLayout({
         <nav className="flex h-full items-center content-center justify-center">
           <LocalizedClientLink
             href="/"
-            className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base uppercase"
+            className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base flex items-center gap-x-2"
             data-testid="store-link"
           >
-            Afrylo
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/favicon.ico"
+              alt="Afrylo"
+              className="w-7 h-7"
+            />
+            <span className="uppercase">Afrylo</span>
           </LocalizedClientLink>
         </nav>
       </div>
