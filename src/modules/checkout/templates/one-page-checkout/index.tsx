@@ -160,7 +160,7 @@ export default function OnePageCheckout({
             <span>Pay on Delivery</span>
             <span className="text-ui-border-base">|</span>
             <span>Secure Payment</span>
-          />
+          </div>
         </div>
       </form>
     </div>
