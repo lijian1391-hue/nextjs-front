@@ -3,6 +3,25 @@ import { clx } from "@medusajs/ui"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 
+function PriceDisplay({
+  parts,
+  className,
+  "data-testid": testId,
+  "data-value": dataValue,
+}: {
+  parts: { value: string; symbol: string }
+  className?: string
+  "data-testid"?: string
+  "data-value"?: number
+}) {
+  return (
+    <span className={className} data-testid={testId} data-value={dataValue}>
+      {parts.value}
+      <span className="text-[0.65em] ml-0.5">{parts.symbol}</span>
+    </span>
+  )
+}
+
 export default function ProductPrice({
   product,
   variant,
@@ -30,24 +49,21 @@ export default function ProductPrice({
             -{selectedPrice.percentage_diff}%
           </span>
         )}
-        <span
+        <PriceDisplay
+          parts={selectedPrice.calculated_price_parts}
           className={clx("text-2xl-semi", {
             "text-jumia-orange": selectedPrice.price_type === "sale",
           })}
           data-testid="product-price"
           data-value={selectedPrice.calculated_price_number}
-        >
-          {!variant && "From "}
-          {selectedPrice.calculated_price}
-        </span>
+        />
         {selectedPrice.price_type === "sale" && (
-          <span
+          <PriceDisplay
+            parts={selectedPrice.original_price_parts}
             className="line-through text-base-regular text-ui-fg-muted"
             data-testid="original-product-price"
             data-value={selectedPrice.original_price_number}
-          >
-            {selectedPrice.original_price}
-          </span>
+          />
         )}
       </div>
     </div>

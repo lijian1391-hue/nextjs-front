@@ -1,24 +1,34 @@
 import { HttpTypes } from "@medusajs/types"
 import { getPercentageDiff } from "./get-percentage-diff"
-import { convertToLocale } from "./money"
+import { convertToLocale, splitPriceParts } from "./money"
 
 export const getPricesForVariant = (variant: any) => {
   if (!variant?.calculated_price?.calculated_amount) {
     return null
   }
 
+  const currency_code = variant.calculated_price.currency_code
+
   return {
     calculated_price_number: variant.calculated_price.calculated_amount,
     calculated_price: convertToLocale({
       amount: variant.calculated_price.calculated_amount,
-      currency_code: variant.calculated_price.currency_code,
+      currency_code,
+    }),
+    calculated_price_parts: splitPriceParts({
+      amount: variant.calculated_price.calculated_amount,
+      currency_code,
     }),
     original_price_number: variant.calculated_price.original_amount,
     original_price: convertToLocale({
       amount: variant.calculated_price.original_amount,
-      currency_code: variant.calculated_price.currency_code,
+      currency_code,
     }),
-    currency_code: variant.calculated_price.currency_code,
+    original_price_parts: splitPriceParts({
+      amount: variant.calculated_price.original_amount,
+      currency_code,
+    }),
+    currency_code,
     price_type: variant.calculated_price.calculated_price.price_list_type,
     percentage_diff: getPercentageDiff(
       variant.calculated_price.original_amount,

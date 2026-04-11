@@ -4,7 +4,7 @@ import { Badge, Heading, Input, Label, Text } from "@medusajs/ui"
 import React from "react"
 
 import { applyPromotions } from "@lib/data/cart"
-import { convertToLocale } from "@lib/util/money"
+import { splitPriceParts } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import Trash from "@modules/common/icons/trash"
 import ErrorMessage from "../error-message"
@@ -131,12 +131,13 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                               {promotion.application_method.type ===
                               "percentage"
                                 ? `${promotion.application_method.value}%`
-                                : convertToLocale({
-                                    amount: +promotion.application_method.value,
-                                    currency_code:
-                                      promotion.application_method
-                                        .currency_code,
-                                  })}
+                                : (() => {
+                                    const { value, symbol } = splitPriceParts({
+                                      amount: +promotion.application_method.value,
+                                      currency_code: promotion.application_method.currency_code,
+                                    })
+                                    return `${value} ${symbol}`
+                                  })()}
                             </>
                           )}
                         )

@@ -1,6 +1,6 @@
 "use client"
 
-import { convertToLocale } from "@lib/util/money"
+import Price from "@modules/common/components/price"
 import { CheckCircleSolid, XMark } from "@medusajs/icons"
 import {
   HttpTypes,
@@ -163,10 +163,7 @@ function FreeShippingInline({
           >
             Only{" "}
             <span className="text-neutral-950">
-              {convertToLocale({
-                amount: price.target_remaining,
-                currency_code: cart.currency_code,
-              })}
+              <Price amount={price.target_remaining} currency_code={cart.currency_code} />
             </span>{" "}
             away
           </div>
@@ -239,10 +236,7 @@ function FreeShippingPopup({
               >
                 Only{" "}
                 <span className="text-white">
-                  {convertToLocale({
-                    amount: price.target_remaining,
-                    currency_code: cart.currency_code,
-                  })}
+                  <Price amount={price.target_remaining} currency_code={cart.currency_code} />
                 </span>{" "}
                 away
               </div>

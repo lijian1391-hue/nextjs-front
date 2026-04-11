@@ -10,8 +10,10 @@ export type FeaturedProduct = {
 export type VariantPrice = {
   calculated_price_number: number
   calculated_price: string
+  calculated_price_parts: { value: string; symbol: string }
   original_price_number: number
   original_price: string
+  original_price_parts: { value: string; symbol: string }
   currency_code: string
   price_type: string
   percentage_diff: string

@@ -6,6 +6,9 @@ export default async function PreviewPrice({ price }: { price: VariantPrice }) {
     return null
   }
 
+  const parts = price.calculated_price_parts as { value: string; symbol: string } | undefined
+  const origParts = price.original_price_parts as { value: string; symbol: string } | undefined
+
   return (
     <>
       {price.price_type === "sale" && (
@@ -13,7 +16,11 @@ export default async function PreviewPrice({ price }: { price: VariantPrice }) {
           className="line-through text-ui-fg-muted"
           data-testid="original-price"
         >
-          {price.original_price}
+          {origParts ? (
+            <>{origParts.value}<span className="text-[0.65em] ml-0.5">{origParts.symbol}</span></>
+          ) : (
+            price.original_price
+          )}
         </Text>
       )}
       <Text
@@ -22,7 +29,11 @@ export default async function PreviewPrice({ price }: { price: VariantPrice }) {
         })}
         data-testid="price"
       >
-        {price.calculated_price}
+        {parts ? (
+          <>{parts.value}<span className="text-[0.65em] ml-0.5">{parts.symbol}</span></>
+        ) : (
+          price.calculated_price
+        )}
       </Text>
     </>
   )
