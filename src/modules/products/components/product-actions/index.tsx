@@ -35,6 +35,7 @@ export default function ProductActions({
   const searchParams = useSearchParams()
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
+  const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
   const countryCode = useParams().countryCode as string
 
@@ -123,7 +124,7 @@ export default function ProductActions({
     try {
       await addToCart({
         variantId: selectedVariant.id,
-        quantity: 1,
+        quantity,
         countryCode,
       })
 
@@ -138,25 +139,47 @@ export default function ProductActions({
   return (
     <>
       <div className="flex flex-col gap-y-4">
-        <div>
-          {(product.variants?.length ?? 0) > 1 && (
-            <div className="flex flex-col gap-y-4">
-              {(product.options || []).map((option) => {
-                return (
-                  <div key={option.id}>
-                    <OptionSelect
-                      option={option}
-                      current={options[option.id]}
-                      updateOption={setOptionValue}
-                      title={option.title ?? ""}
-                      data-testid="product-options"
-                      disabled={!!disabled || isAdding}
-                    />
-                  </div>
-                )
-              })}
-            </div>
-          )}
+        {/* Variant selection */}
+        {(product.variants?.length ?? 0) > 1 && (
+          <div className="flex flex-col gap-y-4">
+            {(product.options || []).map((option) => {
+              return (
+                <div key={option.id}>
+                  <OptionSelect
+                    option={option}
+                    current={options[option.id]}
+                    updateOption={setOptionValue}
+                    title={option.title ?? ""}
+                    data-testid="product-options"
+                    disabled={!!disabled || isAdding}
+                  />
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Quantity selector */}
+        <div className="flex flex-col gap-y-2">
+          <span className="text-sm">Quantity</span>
+          <div className="flex items-center border border-ui-border-base rounded-md w-fit">
+            <button
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              className="w-10 h-10 flex items-center justify-center text-ui-fg-base hover:bg-ui-bg-subtle transition-colors"
+              disabled={quantity <= 1}
+            >
+              −
+            </button>
+            <span className="w-10 h-10 flex items-center justify-center text-base-regular border-x border-ui-border-base">
+              {quantity}
+            </span>
+            <button
+              onClick={() => setQuantity((q) => q + 1)}
+              className="w-10 h-10 flex items-center justify-center text-ui-fg-base hover:bg-ui-bg-subtle transition-colors"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         <ProductPrice product={product} variant={selectedVariant} />
@@ -171,7 +194,7 @@ export default function ProductActions({
             !isValidVariant
           }
           variant="primary"
-          className="w-full h-10 hidden small:flex"
+          className="w-full h-12 hidden small:flex"
           isLoading={isAdding}
           data-testid="add-product-button"
         >
@@ -179,7 +202,7 @@ export default function ProductActions({
             ? "Select variant"
             : !inStock || !isValidVariant
             ? "Out of stock"
-            : "Add to cart"}
+            : "ORDER NOW"}
         </Button>
       </div>
 
@@ -192,6 +215,7 @@ export default function ProductActions({
         handleAddToCart={handleAddToCart}
         isAdding={isAdding}
         optionsDisabled={!!disabled || isAdding}
+        quantity={quantity}
       />
     </>
   )

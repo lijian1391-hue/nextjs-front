@@ -18,6 +18,7 @@ type MobileCtaBarProps = {
   handleAddToCart: () => void
   isAdding?: boolean
   optionsDisabled: boolean
+  quantity?: number
 }
 
 const MobileCtaBar = ({
@@ -29,6 +30,7 @@ const MobileCtaBar = ({
   handleAddToCart,
   isAdding,
   optionsDisabled,
+  quantity,
 }: MobileCtaBarProps) => {
   const { state: sheetOpen, open: openSheet, close: closeSheet } = useToggleState()
   const isSimple = isSimpleProduct(product)
@@ -75,13 +77,18 @@ const MobileCtaBar = ({
                 >
                   {selectedPrice.calculated_price}
                 </span>
+                {quantity && quantity > 1 && (
+                  <span className="text-small-regular text-ui-fg-muted">
+                    × {quantity}
+                  </span>
+                )}
               </div>
             ) : (
               <ProductPrice product={product} variant={variant} />
             )}
           </button>
 
-          {/* Add to cart button */}
+          {/* Order button */}
           <Button
             onClick={handleAddToCart}
             disabled={!inStock || !variant || isAdding}
@@ -94,7 +101,7 @@ const MobileCtaBar = ({
               ? "Select"
               : !inStock
               ? "Sold out"
-              : "Add to cart"}
+              : "ORDER NOW"}
           </Button>
         </div>
       </div>
