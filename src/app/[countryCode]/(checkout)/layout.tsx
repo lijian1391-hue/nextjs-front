@@ -1,5 +1,7 @@
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
+const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || "Afrylo"
+
 export default function CheckoutLayout({
   children,
 }: {
@@ -8,20 +10,24 @@ export default function CheckoutLayout({
   return (
     <div className="w-full bg-white relative small:min-h-screen">
       <div className="h-14 bg-white border-b">
-        <nav className="flex h-full items-center content-center justify-center">
-          <LocalizedClientLink
-            href="/"
-            className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base flex items-center gap-x-2"
-            data-testid="store-link"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/favicon.ico"
-              alt="Afrylo"
-              className="w-7 h-7"
-            />
-            <span className="uppercase">Afrylo</span>
-          </LocalizedClientLink>
+        <nav className="flex h-full items-center content-container">
+          <div className="flex-1 flex items-center">
+            <LocalizedClientLink
+              href="/"
+              data-testid="store-link"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/favicon.ico"
+                alt={STORE_NAME}
+                className="w-7 h-7"
+              />
+            </LocalizedClientLink>
+          </div>
+
+          <span className="txt-compact-xlarge-plus text-ui-fg-subtle uppercase">{STORE_NAME}</span>
+
+          <div className="flex-1" />
         </nav>
       </div>
       <div className="relative" data-testid="checkout-container">{children}</div>
