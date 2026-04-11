@@ -93,25 +93,18 @@ export default function ProductActions({
 
   // check if the selected variant is in stock
   const inStock = useMemo(() => {
-    // If we don't manage inventory, we can always add to cart
     if (selectedVariant && !selectedVariant.manage_inventory) {
       return true
     }
-
-    // If we allow back orders on the variant, we can add to cart
     if (selectedVariant?.allow_backorder) {
       return true
     }
-
-    // If there is inventory available, we can add to cart
     if (
       selectedVariant?.manage_inventory &&
       (selectedVariant?.inventory_quantity || 0) > 0
     ) {
       return true
     }
-
-    // Otherwise, we can't add to cart
     return false
   }, [selectedVariant])
 
@@ -139,7 +132,18 @@ export default function ProductActions({
 
   return (
     <>
-      <div className="flex flex-col gap-y-4">
+      <div className="flex flex-col gap-y-5">
+        {/* Price */}
+        <ProductPrice product={product} variant={selectedVariant} />
+
+        {/* Urgency trust line */}
+        <div className="flex items-center gap-x-2 text-sm text-ui-fg-muted">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span>Limited Stock &ndash; Buy Now &amp; Pay on Delivery</span>
+        </div>
+
         {/* Variant selection */}
         {(product.variants?.length ?? 0) > 1 && (
           <div className="flex flex-col gap-y-4">
@@ -162,29 +166,28 @@ export default function ProductActions({
 
         {/* Quantity selector */}
         <div className="flex flex-col gap-y-2">
-          <span className="text-sm">Quantity</span>
+          <span className="text-sm font-medium text-ui-fg-base">Quantity</span>
           <div className="flex items-center border border-ui-border-base rounded-md w-fit">
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="w-10 h-10 flex items-center justify-center text-ui-fg-base hover:bg-ui-bg-subtle transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-ui-fg-base hover:bg-ui-bg-subtle transition-colors rounded-l-md"
               disabled={quantity <= 1}
             >
               −
             </button>
-            <span className="w-10 h-10 flex items-center justify-center text-base-regular border-x border-ui-border-base">
+            <span className="w-12 h-10 flex items-center justify-center text-base-regular border-x border-ui-border-base font-medium">
               {quantity}
             </span>
             <button
               onClick={() => setQuantity((q) => q + 1)}
-              className="w-10 h-10 flex items-center justify-center text-ui-fg-base hover:bg-ui-bg-subtle transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-ui-fg-base hover:bg-ui-bg-subtle transition-colors rounded-r-md"
             >
               +
             </button>
           </div>
         </div>
 
-        <ProductPrice product={product} variant={selectedVariant} />
-
+        {/* CTA Button */}
         <Button
           onClick={handleAddToCart}
           disabled={
@@ -195,7 +198,7 @@ export default function ProductActions({
             !isValidVariant
           }
           variant="primary"
-          className="w-full h-12 hidden small:flex"
+          className="w-full h-14 text-base-regular font-semibold hidden small:flex"
           isLoading={isAdding}
           data-testid="add-product-button"
         >
@@ -205,6 +208,13 @@ export default function ProductActions({
             ? "Out of stock"
             : "ORDER NOW"}
         </Button>
+
+        {/* Trust signals below CTA */}
+        <div className="hidden small:flex items-center justify-center gap-3 text-small-regular text-ui-fg-muted">
+          <span>Pay on Delivery</span>
+          <span className="text-ui-border-base">|</span>
+          <span>Secure Payment</span>
+        </div>
       </div>
 
       <MobileCtaBar

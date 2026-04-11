@@ -48,19 +48,19 @@ const MobileCtaBar = ({
 
   return (
     <>
-      <div className="fixed bottom-0 inset-x-0 z-50 small:hidden bg-white border-t border-ui-border-base shadow-elevation-card-rest">
-        <div className="flex items-center h-16 gap-x-3 px-4">
-          {/* Price + variant summary */}
+      <div className="fixed bottom-0 inset-x-0 z-50 small:hidden bg-white border-t border-ui-border-base shadow-lg">
+        <div className="flex flex-col px-4 pt-2 pb-3">
+          {/* Price + variant row */}
           <button
             onClick={!isSimple ? openSheet : undefined}
-            className="flex-1 text-left min-w-0"
+            className="flex items-baseline gap-x-3 mb-2 text-left"
           >
             {!isSimple && (
-              <div className="text-small-regular text-ui-fg-muted truncate">
+              <span className="text-small-regular text-ui-fg-muted truncate">
                 {variant && Object.keys(options).length > 0
                   ? Object.values(options).join(" / ")
                   : "Select options"}
-              </div>
+              </span>
             )}
             {selectedPrice ? (
               <div className="flex items-center gap-x-2">
@@ -71,7 +71,7 @@ const MobileCtaBar = ({
                 )}
                 <span
                   className={clx("text-base-semi", {
-                    "text-ui-fg-interactive":
+                    "text-jumia-orange":
                       selectedPrice.price_type === "sale",
                   })}
                 >
@@ -88,21 +88,26 @@ const MobileCtaBar = ({
             )}
           </button>
 
-          {/* Order button */}
+          {/* CTA button */}
           <Button
             onClick={handleAddToCart}
             disabled={!inStock || !variant || isAdding}
             variant="primary"
-            className="h-10 px-6 shrink-0"
+            className="w-full h-12 font-semibold"
             isLoading={isAdding}
             data-testid="mobile-cart-button"
           >
             {!variant
-              ? "Select"
+              ? "Select options"
               : !inStock
               ? "Sold out"
               : "ORDER NOW"}
           </Button>
+
+          {/* Trust signal */}
+          <span className="text-center text-xs text-ui-fg-muted mt-1.5">
+            Pay on Delivery &bull; Secure Payment
+          </span>
         </div>
       </div>
 

@@ -12,6 +12,7 @@ import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
 import ProductActionsWrapper from "./product-actions-wrapper"
+import Divider from "@modules/common/components/divider"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -33,14 +34,14 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
   return (
     <>
       <div data-testid="product-container">
-        <div className="flex flex-col small:flex-row small:items-start small:gap-10 small:max-w-[1440px] small:mx-auto small:px-6">
+        <div className="flex flex-col small:flex-row small:items-start small:gap-8 small:max-w-[1440px] small:mx-auto small:px-4">
           {/* Left column / Top: Image gallery */}
-          <div className="w-full small:w-[55%] small:sticky small:top-[100px] small:self-start">
+          <div className="w-full small:w-[55%] small:sticky small:top-[80px] small:self-start">
             <HeroGallery images={images} />
           </div>
 
           {/* Right column / Bottom: Product info + actions */}
-          <div className="w-full small:w-[45%] small:max-w-[500px] px-4 small:px-0 pt-6 small:pt-0 pb-24 small:pb-8 flex flex-col gap-y-6">
+          <div className="w-full small:w-[45%] small:max-w-[520px] px-4 small:px-0 pt-4 small:pt-0 pb-28 small:pb-8 flex flex-col gap-y-4">
             <ProductOnboardingCta />
             <ProductInfo product={product} />
             <Suspense
@@ -54,13 +55,14 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
             >
               <ProductActionsWrapper id={product.id} region={region} />
             </Suspense>
+            <Divider />
             <ProductDescription product={product} />
             <ProductTabs product={product} />
           </div>
         </div>
 
         <div
-          className="content-container my-16 small:my-32"
+          className="content-container my-12 small:my-24"
           data-testid="related-products-container"
         >
           <Suspense fallback={<SkeletonRelatedProducts />}>

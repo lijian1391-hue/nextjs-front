@@ -12,18 +12,33 @@ const ProductDescription = ({ product }: ProductDescriptionProps) => {
 
   if (!product.description) return null
 
+  // Split description into lines for bullet-point rendering
+  const lines = product.description
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+
   return (
-    <div className="py-4">
+    <div className="py-2">
+      <h3 className="text-base-semi text-ui-fg-base mb-3">Description</h3>
       <div
-        className={`text-base-regular text-ui-fg-subtle whitespace-pre-line ${
-          !expanded ? "line-clamp-3 small:line-clamp-none" : ""
+        className={`text-sm-regular text-ui-fg-subtle leading-relaxed ${
+          !expanded ? "line-clamp-4 small:line-clamp-none" : ""
         }`}
       >
-        {product.description}
+        {lines.length > 1 ? (
+          <ul className="list-disc list-inside space-y-1">
+            {lines.map((line, i) => (
+              <li key={i}>{line.replace(/^[-•*]\s*/, "")}</li>
+            ))}
+          </ul>
+        ) : (
+          <p>{product.description}</p>
+        )}
       </div>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="text-ui-fg-interactive text-small-regular mt-1 small:hidden"
+        className="text-jumia-orange text-small-regular mt-2 small:hidden font-medium"
       >
         {expanded ? "Show less" : "Read more"}
       </button>

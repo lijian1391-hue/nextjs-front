@@ -22,37 +22,34 @@ export default function ProductPrice({
   }
 
   return (
-    <div className="flex flex-col text-ui-fg-base">
-      <span
-        className={clx("text-xl-semi", {
-          "text-jumia-orange": selectedPrice.price_type === "sale",
-        })}
-      >
-        {!variant && "From "}
+    <div className="flex flex-col gap-y-1">
+      {/* Discount badge + price row */}
+      <div className="flex items-baseline gap-x-3 flex-wrap">
+        {selectedPrice.price_type === "sale" && (
+          <span className="inline-block bg-jumia-orange text-white text-xs font-bold px-2 py-0.5 rounded">
+            -{selectedPrice.percentage_diff}%
+          </span>
+        )}
         <span
+          className={clx("text-2xl-semi", {
+            "text-jumia-orange": selectedPrice.price_type === "sale",
+          })}
           data-testid="product-price"
           data-value={selectedPrice.calculated_price_number}
         >
+          {!variant && "From "}
           {selectedPrice.calculated_price}
         </span>
-      </span>
-      {selectedPrice.price_type === "sale" && (
-        <>
-          <p>
-            <span className="text-ui-fg-subtle">Original: </span>
-            <span
-              className="line-through"
-              data-testid="original-product-price"
-              data-value={selectedPrice.original_price_number}
-            >
-              {selectedPrice.original_price}
-            </span>
-          </p>
-          <span className="text-jumia-orange font-semibold">
-            -{selectedPrice.percentage_diff}%
+        {selectedPrice.price_type === "sale" && (
+          <span
+            className="line-through text-base-regular text-ui-fg-muted"
+            data-testid="original-product-price"
+            data-value={selectedPrice.original_price_number}
+          >
+            {selectedPrice.original_price}
           </span>
-        </>
-      )}
+        )}
+      </div>
     </div>
   )
 }
