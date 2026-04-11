@@ -156,6 +156,11 @@ export default function OnePageCheckout({
             error={message}
             data-testid="checkout-error-message"
           />
+          <div className="flex items-center justify-center gap-4 mt-3 text-small-regular text-ui-fg-muted">
+            <span>Pay on Delivery</span>
+            <span className="text-ui-border-base">|</span>
+            <span>Secure Payment</span>
+          />
         </div>
       </form>
     </div>

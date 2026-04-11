@@ -21,6 +21,11 @@ module.exports = {
         padding: "padding-top padding-right padding-bottom padding-left",
       },
       colors: {
+        jumia: {
+          orange: "#F68B1E",
+          "orange-hover": "#E67D14",
+          "orange-dark": "#D26E0F",
+        },
         grey: {
           0: "#FFFFFF",
           5: "#F9FAFB",
@@ -60,13 +65,13 @@ module.exports = {
       },
       fontFamily: {
         sans: [
-          "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
           "Roboto",
           "Helvetica Neue",
           "Ubuntu",
+          "Inter",
           "sans-serif",
         ],
       },

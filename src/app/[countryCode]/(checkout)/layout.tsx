@@ -9,7 +9,7 @@ export default function CheckoutLayout({
 }) {
   return (
     <div className="w-full bg-white relative small:min-h-screen">
-      <div className="h-14 bg-white border-b">
+      <div className="h-12 bg-white border-b-2 border-b-jumia-orange">
         <nav className="flex h-full items-center content-container">
           <div className="flex-1 flex items-center">
             <LocalizedClientLink
@@ -25,7 +25,7 @@ export default function CheckoutLayout({
             </LocalizedClientLink>
           </div>
 
-          <span className="txt-compact-xlarge-plus text-ui-fg-subtle uppercase">{STORE_NAME}</span>
+          <span className="txt-compact-xlarge-plus text-ui-fg-subtle font-semibold">{STORE_NAME}</span>
 
           <div className="flex-1" />
         </nav>
