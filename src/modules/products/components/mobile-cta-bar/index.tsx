@@ -19,6 +19,7 @@ type MobileCtaBarProps = {
   isAdding?: boolean
   optionsDisabled: boolean
   quantity?: number
+  onPrefetchCheckout?: () => void
 }
 
 const MobileCtaBar = ({
@@ -31,6 +32,7 @@ const MobileCtaBar = ({
   isAdding,
   optionsDisabled,
   quantity,
+  onPrefetchCheckout,
 }: MobileCtaBarProps) => {
   const { state: sheetOpen, open: openSheet, close: closeSheet } = useToggleState()
   const isSimple = isSimpleProduct(product)
@@ -91,6 +93,7 @@ const MobileCtaBar = ({
           {/* CTA button */}
           <Button
             onClick={handleAddToCart}
+            onTouchStart={onPrefetchCheckout}
             disabled={!inStock || !variant || isAdding}
             variant="primary"
             className="w-full h-12 font-semibold"

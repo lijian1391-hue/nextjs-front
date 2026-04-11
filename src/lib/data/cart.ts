@@ -261,6 +261,62 @@ export async function initiatePaymentSession(
     .catch(medusaError)
 }
 
+/**
+ * One-shot order flow: clear old cart → create new cart → add item.
+ * Eliminates the overhead of two separate server actions and skips the
+ * unnecessary retrieveCart call.
+ */
+export async function quickOrder({
+  variantId,
+  quantity,
+  countryCode,
+}: {
+  variantId: string
+  quantity: number
+  countryCode: string
+}) {
+  if (!variantId) {
+    throw new Error("Missing variant ID")
+  }
+
+  // 1. Clear old cart cookie
+  await removeCartId()
+
+  // 2. Resolve region (cached after first call)
+  const region = await getRegion(countryCode)
+  if (!region) {
+    throw new Error(`Region not found for country code: ${countryCode}`)
+  }
+
+  // 3. Create fresh cart — no need to retrieve first since we just cleared
+  const headers = { ...(await getAuthHeaders()) }
+  const locale = await getLocale()
+  const { cart } = await sdk.store.cart.create(
+    { region_id: region.id, locale: locale || undefined },
+    {},
+    headers
+  )
+
+  // 4. Persist cart ID
+  await setCartId(cart.id)
+
+  // 5. Add line item
+  await sdk.store.cart
+    .createLineItem(
+      cart.id,
+      { variant_id: variantId, quantity },
+      {},
+      headers
+    )
+    .catch(medusaError)
+
+  // 6. Batch revalidation (once at the end)
+  const cartCacheTag = await getCacheTag("carts")
+  if (cartCacheTag) revalidateTag(cartCacheTag)
+  const fulfillmentCacheTag = await getCacheTag("fulfillment")
+  if (fulfillmentCacheTag) revalidateTag(fulfillmentCacheTag)
+}
+
 export async function applyPromotions(codes: string[]) {
   const cartId = await getCartId()
 

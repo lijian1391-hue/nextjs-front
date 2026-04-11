@@ -1,12 +1,12 @@
 "use client"
 
-import { addToCart, clearCart } from "@lib/data/cart"
+import { quickOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
 import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileCtaBar from "../mobile-cta-bar"
 import { useRouter } from "next/navigation"
@@ -58,7 +58,6 @@ export default function ProductActions({
     })
   }, [product.variants, options])
 
-  // update the options when a variant is selected
   const setOptionValue = (optionId: string, value: string) => {
     setOptions((prev) => ({
       ...prev,
@@ -66,7 +65,6 @@ export default function ProductActions({
     }))
   }
 
-  //check if the selected options produce a valid variant
   const isValidVariant = useMemo(() => {
     return product.variants?.some((v) => {
       const variantOptions = optionsAsKeymap(v.options)
@@ -91,7 +89,6 @@ export default function ProductActions({
     router.replace(pathname + "?" + params.toString())
   }, [selectedVariant, isValidVariant])
 
-  // check if the selected variant is in stock
   const inStock = useMemo(() => {
     if (selectedVariant && !selectedVariant.manage_inventory) {
       return true
@@ -108,15 +105,13 @@ export default function ProductActions({
     return false
   }, [selectedVariant])
 
-  // add the selected variant to the cart and redirect to checkout
-  const handleAddToCart = async () => {
+  const handleAddToCart = useCallback(async () => {
     if (!selectedVariant?.id) return null
 
     setIsAdding(true)
 
     try {
-      await clearCart()
-      await addToCart({
+      await quickOrder({
         variantId: selectedVariant.id,
         quantity,
         countryCode,
@@ -124,11 +119,16 @@ export default function ProductActions({
 
       router.push(`/${countryCode}/checkout`)
     } catch (error) {
-      console.error("[addToCart] Error:", error)
+      console.error("[quickOrder] Error:", error)
     } finally {
       setIsAdding(false)
     }
-  }
+  }, [selectedVariant, quantity, countryCode, router])
+
+  // Prefetch checkout page on hover so navigation is instant
+  const prefetchCheckout = useCallback(() => {
+    router.prefetch(`/${countryCode}/checkout`)
+  }, [router, countryCode])
 
   return (
     <>
@@ -190,6 +190,8 @@ export default function ProductActions({
         {/* CTA Button */}
         <Button
           onClick={handleAddToCart}
+          onMouseEnter={prefetchCheckout}
+          onTouchStart={prefetchCheckout}
           disabled={
             !inStock ||
             !selectedVariant ||
@@ -227,6 +229,7 @@ export default function ProductActions({
         isAdding={isAdding}
         optionsDisabled={!!disabled || isAdding}
         quantity={quantity}
+        onPrefetchCheckout={prefetchCheckout}
       />
     </>
   )
