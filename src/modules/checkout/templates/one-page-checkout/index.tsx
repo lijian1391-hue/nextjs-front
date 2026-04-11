@@ -12,6 +12,7 @@ import ShippingAddress from "@modules/checkout/components/shipping-address"
 import { setAddresses } from "@lib/data/cart"
 import { useActionState, useEffect, useMemo, useState } from "react"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
+import { useRouter } from "next/navigation"
 
 type OnePageCheckoutProps = {
   cart: HttpTypes.StoreCart
@@ -27,6 +28,7 @@ export default function OnePageCheckout({
   availablePaymentMethods,
 }: OnePageCheckoutProps) {
   const [message, formAction] = useActionState(setAddresses, null)
+  const router = useRouter()
 
   // Determine active payment info
   const activePaymentSession = cart.payment_collection?.payment_sessions?.find(
@@ -77,6 +79,14 @@ export default function OnePageCheckout({
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 py-6 small:py-12">
+      {/* Back button */}
+      <button
+        onClick={() => router.back()}
+        className="flex items-center gap-x-1 text-small-regular text-ui-fg-subtle hover:text-ui-fg-base mb-6 transition-colors"
+      >
+        ← Back
+      </button>
+
       {/* 1. Order items */}
       <div>
         <Heading level="h2" className="text-2xl-regular mb-4">

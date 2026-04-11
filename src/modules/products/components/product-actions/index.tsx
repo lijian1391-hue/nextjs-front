@@ -1,6 +1,6 @@
 "use client"
 
-import { addToCart } from "@lib/data/cart"
+import { addToCart, clearCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
@@ -122,6 +122,7 @@ export default function ProductActions({
     setIsAdding(true)
 
     try {
+      await clearCart()
       await addToCart({
         variantId: selectedVariant.id,
         quantity,

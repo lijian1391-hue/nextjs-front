@@ -16,6 +16,12 @@ import {
 import { getRegion } from "./regions"
 import { getLocale } from "@lib/data/locale-actions"
 
+export async function clearCart() {
+  await removeCartId()
+  const cartCacheTag = await getCacheTag("carts")
+  if (cartCacheTag) revalidateTag(cartCacheTag)
+}
+
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
  * @param cartId - optional - The ID of the cart to retrieve.
