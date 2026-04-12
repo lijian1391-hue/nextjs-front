@@ -121,7 +121,30 @@ export async function middleware(request: NextRequest) {
 
   // if one of the country codes is in the url and the cache id is set, return next
   if (urlHasCountryCode && cacheIdCookie) {
-    return NextResponse.next()
+    const response = NextResponse.next()
+
+    // Set Cache-Control for public pages (CDN edge cache)
+    const pathname = request.nextUrl.pathname
+    const isPublicPage =
+      pathname === `/${countryCode}` ||
+      pathname === `/${countryCode}/store` ||
+      pathname.startsWith(`/${countryCode}/products/`) ||
+      pathname.startsWith(`/${countryCode}/categories/`) ||
+      pathname.startsWith(`/${countryCode}/collections/`)
+
+    if (isPublicPage) {
+      response.headers.set(
+        "Cache-Control",
+        "public, s-maxage=604800"
+      )
+    } else {
+      response.headers.set(
+        "Cache-Control",
+        "private, no-cache, no-store, max-age=0, must-revalidate"
+      )
+    }
+
+    return response
   }
 
   // if one of the country codes is in the url and the cache id is not set, set the cache id and redirect

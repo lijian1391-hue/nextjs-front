@@ -9,7 +9,7 @@ export default function CheckoutLayout({
 }) {
   return (
     <div className="w-full bg-white relative small:min-h-screen">
-      <div className="h-12 bg-white border-b-2 border-b-jumia-orange">
+      <div className="h-12 bg-white border-b border-ui-border-base">
         <nav className="flex h-full items-center content-container">
           <div className="flex-1 flex items-center">
             <LocalizedClientLink

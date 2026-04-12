@@ -5,9 +5,7 @@ import ProductActions from "@modules/products/components/product-actions"
 import ProductDescription from "@modules/products/components/product-description"
 import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
 import ProductTabs from "@modules/products/components/product-tabs"
-import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
-import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
@@ -65,9 +63,6 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           className="content-container my-12 small:my-24"
           data-testid="related-products-container"
         >
-          <Suspense fallback={<SkeletonRelatedProducts />}>
-            <RelatedProducts product={product} countryCode={countryCode} />
-          </Suspense>
         </div>
       </div>
     </>

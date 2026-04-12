@@ -63,32 +63,4 @@ const nextConfig = {
   },
 }
 
-const cacheControlPublic = "public, s-maxage=604800"
-
-module.exports = {
-  ...nextConfig,
-  async headers() {
-    return [
-      {
-        source: "/:countryCode",
-        headers: [{ key: "Cache-Control", value: cacheControlPublic }],
-      },
-      {
-        source: "/:countryCode/store",
-        headers: [{ key: "Cache-Control", value: cacheControlPublic }],
-      },
-      {
-        source: "/:countryCode/products/:path*",
-        headers: [{ key: "Cache-Control", value: cacheControlPublic }],
-      },
-      {
-        source: "/:countryCode/categories/:path*",
-        headers: [{ key: "Cache-Control", value: cacheControlPublic }],
-      },
-      {
-        source: "/:countryCode/collections/:path*",
-        headers: [{ key: "Cache-Control", value: cacheControlPublic }],
-      },
-    ]
-  },
-}
+module.exports = nextConfig
