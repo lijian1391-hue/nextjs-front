@@ -43,5 +43,49 @@ export async function POST(request: NextRequest) {
     results.push(`path:${path} (layout)`)
   }
 
+  // Purge Cloudflare CDN edge cache for all affected URLs
+  // Uses file-based purge (available on all plans, not Enterprise-only)
+  const cfZoneId = process.env.CACHE_PURGE_ZONE_ID
+  const cfApiToken = process.env.CACHE_PURGE_API_TOKEN
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+
+  if (cfZoneId && cfApiToken && baseUrl) {
+    // Collect all unique paths to purge
+    const allPaths = new Set<string>()
+    if (paths && Array.isArray(paths)) {
+      paths.forEach((p: string) => allPaths.add(p))
+    }
+    corePaths.forEach((p) => allPaths.add(p))
+
+    const urls = Array.from(allPaths).map((p) => `${baseUrl}${p}`)
+
+    try {
+      const purgeResponse = await fetch(
+        `https://api.cloudflare.com/client/v4/zones/${cfZoneId}/purge_cache`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${cfApiToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ files: urls }),
+        }
+      )
+
+      if (purgeResponse.ok) {
+        results.push(`cdn:purged ${urls.length} URLs`)
+      } else {
+        const errorBody = await purgeResponse.text()
+        results.push(`cdn:purge failed (${purgeResponse.status})`)
+        console.error("[revalidate] CDN purge failed:", errorBody)
+      }
+    } catch (err) {
+      results.push("cdn:purge error")
+      console.error("[revalidate] CDN purge error:", err)
+    }
+  } else {
+    results.push("cdn:skipped (no credentials)")
+  }
+
   return NextResponse.json({ revalidated: true, items: results })
 }
