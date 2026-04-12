@@ -1,8 +1,8 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import { useMemo, useState } from "react"
-import DOMPurify from "isomorphic-dompurify"
+import { useEffect, useMemo, useState } from "react"
+import DOMPurify from "dompurify"
 
 type ProductDescriptionProps = {
   product: HttpTypes.StoreProduct
@@ -14,9 +14,17 @@ const isHtml = (text: string): boolean => {
 
 const ProductDescription = ({ product }: ProductDescriptionProps) => {
   const [expanded, setExpanded] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const sanitizedHtml = useMemo(() => {
     if (!product.description || !isHtml(product.description)) return ""
+    // On server / before hydration: trust admin-generated HTML from TipTap
+    // On client: sanitize as defense-in-depth
+    if (!mounted) return product.description
     return DOMPurify.sanitize(product.description, {
       ALLOWED_TAGS: [
         "h1", "h2", "h3", "h4", "h5", "h6",
@@ -41,7 +49,7 @@ const ProductDescription = ({ product }: ProductDescriptionProps) => {
       ],
       ADD_ATTR: ["allow", "allowfullscreen", "frameborder"],
     })
-  }, [product.description])
+  }, [product.description, mounted])
 
   if (!product.description) return null
 

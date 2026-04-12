@@ -27,7 +27,6 @@
     "@stripe/react-stripe-js": "^5.3.0",
     "@stripe/stripe-js": "^8.2.0",
     "dompurify": "^3.3.3",
-    "isomorphic-dompurify": "^3.8.0",
     "lodash": "^4.17.21",
     "next": "15.3.9",
     "qs": "^6.12.1",
