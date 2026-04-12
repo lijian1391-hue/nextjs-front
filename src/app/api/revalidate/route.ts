@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Revalidate by paths — this is the reliable mechanism
-  // that works regardless of cache ID prefixes
+  // Revalidate specific paths sent from the backend
+  // (includes product detail pages like /ng/products/handle)
   if (paths && Array.isArray(paths)) {
     for (const path of paths) {
       revalidatePath(path)
@@ -31,10 +31,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Always revalidate core storefront paths when products change
+  // Always revalidate core storefront paths (layout-level)
+  // This clears ALL pages sharing the same layout group
   const corePaths = [
     `/${cc}`,
     `/${cc}/store`,
+    `/${cc}/products`,
   ]
   for (const path of corePaths) {
     revalidatePath(path, "layout")
