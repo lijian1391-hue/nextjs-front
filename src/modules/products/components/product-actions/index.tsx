@@ -39,9 +39,9 @@ export default function ProductActions({
   const [isAdding, setIsAdding] = useState(false)
   const countryCode = useParams().countryCode as string
 
-  // If there is only 1 variant, preselect the options
+  // Auto-select the first variant on load
   useEffect(() => {
-    if (product.variants?.length === 1) {
+    if (product.variants?.length && Object.keys(options).length === 0) {
       const variantOptions = optionsAsKeymap(product.variants[0].options)
       setOptions(variantOptions ?? {})
     }
