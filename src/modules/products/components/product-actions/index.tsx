@@ -49,6 +49,17 @@ export default function ProductActions({
     }
   }, [product.variants])
 
+  const selectedVariant = useMemo(() => {
+    if (!product.variants || product.variants.length === 0) {
+      return
+    }
+
+    return product.variants.find((v) => {
+      const variantOptions = optionsAsKeymap(v.options)
+      return isEqual(variantOptions, options)
+    })
+  }, [product.variants, options])
+
   // Track ViewContent once when variant is first selected
   useEffect(() => {
     if (viewedRef.current || !selectedVariant) return
@@ -67,17 +78,6 @@ export default function ProductActions({
       image_url: product.thumbnail,
     })
   }, [selectedVariant, product.id, product.title, product.thumbnail])
-
-  const selectedVariant = useMemo(() => {
-    if (!product.variants || product.variants.length === 0) {
-      return
-    }
-
-    return product.variants.find((v) => {
-      const variantOptions = optionsAsKeymap(v.options)
-      return isEqual(variantOptions, options)
-    })
-  }, [product.variants, options])
 
   const setOptionValue = (optionId: string, value: string) => {
     setOptions((prev) => ({
