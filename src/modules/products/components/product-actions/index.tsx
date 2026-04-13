@@ -6,10 +6,11 @@ import { Button } from "@medusajs/ui"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
 import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileCtaBar from "../mobile-cta-bar"
 import { useRouter } from "next/navigation"
+import { rudderAnalytics } from "@lib/util/rudderstack"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -38,6 +39,7 @@ export default function ProductActions({
   const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
   const countryCode = useParams().countryCode as string
+  const viewedRef = useRef(false)
 
   // Auto-select the first variant on load
   useEffect(() => {
@@ -46,6 +48,25 @@ export default function ProductActions({
       setOptions(variantOptions ?? {})
     }
   }, [product.variants])
+
+  // Track ViewContent once when variant is first selected
+  useEffect(() => {
+    if (viewedRef.current || !selectedVariant) return
+    viewedRef.current = true
+
+    const price = (selectedVariant as any)?.calculated_price?.calculated_amount
+    const currencyCode = (selectedVariant as any)?.calculated_price?.currency_code
+
+    rudderAnalytics.track("Product Viewed", {
+      product_id: product.id,
+      sku: selectedVariant.sku,
+      name: product.title,
+      price: price ? price / 100 : undefined,
+      currency: currencyCode,
+      url: typeof window !== "undefined" ? window.location.href : undefined,
+      image_url: product.thumbnail,
+    })
+  }, [selectedVariant, product.id, product.title, product.thumbnail])
 
   const selectedVariant = useMemo(() => {
     if (!product.variants || product.variants.length === 0) {
@@ -111,10 +132,36 @@ export default function ProductActions({
     setIsAdding(true)
 
     try {
+      const price = (selectedVariant as any)?.calculated_price?.calculated_amount
+      const currencyCode = (selectedVariant as any)?.calculated_price?.currency_code
+
       await quickOrder({
         variantId: selectedVariant.id,
         quantity,
         countryCode,
+      })
+
+      // Track AddToCart
+      rudderAnalytics.track("Product Added", {
+        product_id: product.id,
+        sku: selectedVariant?.sku,
+        name: product.title,
+        price: price ? price / 100 : undefined,
+        currency: currencyCode,
+        quantity,
+      })
+
+      // Track InitiateCheckout
+      rudderAnalytics.track("Checkout Started", {
+        revenue: price ? (price / 100) * quantity : undefined,
+        currency: currencyCode,
+        products: [
+          {
+            product_id: product.id,
+            quantity,
+            price: price ? price / 100 : undefined,
+          },
+        ],
       })
 
       router.push(`/${countryCode}/checkout`)
@@ -123,7 +170,7 @@ export default function ProductActions({
     } finally {
       setIsAdding(false)
     }
-  }, [selectedVariant, quantity, countryCode, router])
+  }, [selectedVariant, quantity, countryCode, router, product.id, product.title])
 
   // Prefetch checkout page on hover so navigation is instant
   const prefetchCheckout = useCallback(() => {

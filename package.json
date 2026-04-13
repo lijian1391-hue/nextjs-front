@@ -24,6 +24,7 @@
     "@medusajs/ui": "latest",
     "@opennextjs/cloudflare": "^1.18.1",
     "@radix-ui/react-accordion": "^1.2.1",
+    "@rudderstack/analytics-js": "^3.31.0",
     "@stripe/react-stripe-js": "^5.3.0",
     "@stripe/stripe-js": "^8.2.0",
     "dompurify": "^3.3.3",
