@@ -1,5 +1,5 @@
 import { Container, clx } from "@medusajs/ui"
-import Image from "next/image"
+import ResponsiveImage from "@modules/common/components/responsive-image"
 import React from "react"
 
 import PlaceholderImage from "@modules/common/icons/placeholder-image"
@@ -51,7 +51,7 @@ const ImageOrPlaceholder = ({
   size,
 }: Pick<ThumbnailProps, "size"> & { image?: string }) => {
   return image ? (
-    <Image
+    <ResponsiveImage
       src={image}
       alt="Thumbnail"
       className="absolute inset-0 object-cover object-center"

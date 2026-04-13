@@ -1,7 +1,7 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import Image from "next/image"
+import ResponsiveImage from "@modules/common/components/responsive-image"
 import { useEffect, useState } from "react"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Pagination } from "swiper/modules"
@@ -36,7 +36,7 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
       <div className="block small:hidden">
         {singleImage || !mounted ? (
           <div className="relative aspect-square w-full overflow-hidden bg-ui-bg-subtle">
-            <Image
+            <ResponsiveImage
               src={images[0].url!}
               alt="Product image"
               fill
@@ -56,7 +56,7 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
             {images.map((image, index) => (
               <SwiperSlide key={image.id}>
                 <div className="relative aspect-square w-full overflow-hidden bg-ui-bg-subtle">
-                  <Image
+                  <ResponsiveImage
                     src={image.url!}
                     alt={`Product image ${index + 1}`}
                     fill
@@ -75,7 +75,7 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
       <div className="hidden small:block">
         <div className="relative aspect-[3/4] w-full overflow-hidden rounded-rounded bg-ui-bg-subtle">
           {images[selectedIndex]?.url && (
-            <Image
+            <ResponsiveImage
               src={images[selectedIndex].url}
               alt={`Product image ${selectedIndex + 1}`}
               fill
@@ -97,7 +97,7 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
                     : "border-transparent"
                 }`}
               >
-                <Image
+                <ResponsiveImage
                   src={image.url!}
                   alt={`Thumbnail ${index + 1}`}
                   fill

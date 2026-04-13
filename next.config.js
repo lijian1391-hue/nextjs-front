@@ -32,8 +32,17 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    loader: "custom",
+    loaderFile: "./src/lib/util/cf-image-loader.ts",
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.afrylo.com",
+      },
+      {
+        protocol: "https",
+        hostname: "front.afrylo.com",
+      },
       {
         protocol: "http",
         hostname: "localhost",
@@ -50,15 +59,6 @@ const nextConfig = {
         protocol: "https",
         hostname: "medusa-server-testing.s3.us-east-1.amazonaws.com",
       },
-      ...(S3_HOSTNAME && S3_PATHNAME
-        ? [
-            {
-              protocol: "https",
-              hostname: S3_HOSTNAME,
-              pathname: S3_PATHNAME,
-            },
-          ]
-        : []),
     ],
   },
 }
