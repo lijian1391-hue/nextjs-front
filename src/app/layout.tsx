@@ -12,7 +12,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     <html lang="en" data-mode="light">
       <body>
         <RudderstackProvider />
-        <main className="relative">{props.children}</main>
+        <main className="relative overflow-x-hidden">{props.children}</main>
       </body>
     </html>
   )

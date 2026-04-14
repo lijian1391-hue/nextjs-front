@@ -6,7 +6,6 @@ import PlaceholderImage from "@modules/common/icons/placeholder-image"
 
 type ThumbnailProps = {
   thumbnail?: string | null
-  // TODO: Fix image typings
   images?: any[] | null
   size?: "small" | "medium" | "large" | "full" | "square"
   isFeatured?: boolean
@@ -27,16 +26,13 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   return (
     <Container
       className={clx(
-        "relative w-full overflow-hidden p-4 bg-ui-bg-subtle shadow-elevation-card-rest rounded-large group-hover:shadow-elevation-card-hover transition-shadow ease-in-out duration-150",
+        "relative w-full overflow-hidden bg-ui-bg-subtle shadow-elevation-card-rest rounded-large group-hover:shadow-elevation-card-hover transition-shadow ease-in-out duration-150",
         className,
         {
-          "aspect-[11/14]": isFeatured,
-          "aspect-[9/16]": !isFeatured && size !== "square",
-          "aspect-[1/1]": size === "square",
-          "w-[180px]": size === "small",
-          "w-[290px]": size === "medium",
-          "w-[440px]": size === "large",
-          "w-full": size === "full",
+          "aspect-square": true,
+          "max-w-[180px]": size === "small",
+          "max-w-[290px]": size === "medium",
+          "max-w-[440px]": size === "large",
         }
       )}
       data-testid={dataTestid}
@@ -50,14 +46,23 @@ const ImageOrPlaceholder = ({
   image,
   size,
 }: Pick<ThumbnailProps, "size"> & { image?: string }) => {
+  // Map size to appropriate srcSet sizes for optimal image loading
+  const sizesMap: Record<string, string> = {
+    small: "180px",
+    medium: "290px",
+    large: "440px",
+    full: "(max-width: 576px) 50vw, (max-width: 1024px) 33vw, 800px",
+    square: "200px",
+  }
+
   return image ? (
     <ResponsiveImage
       src={image}
       alt="Thumbnail"
       className="absolute inset-0 object-cover object-center"
       draggable={false}
-      quality={50}
-      sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
+      quality={size === "square" ? 60 : 80}
+      sizes={sizesMap[size] || "800px"}
       fill
     />
   ) : (

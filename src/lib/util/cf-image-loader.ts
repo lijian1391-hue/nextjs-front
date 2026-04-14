@@ -17,14 +17,18 @@ const cfImageLoader: ImageLoader = ({ src, width, quality }) => {
     return src
   }
 
+  // Normalize URL: strip protocol for consistent cache key
+  const normalizedSrc = src.replace(/^https?:\/\//, "")
+
+  // Fixed quality to avoid cache fragmentation across different quality values
   const params = [
     `width=${width}`,
-    `quality=${quality || 80}`,
+    "quality=80",
     "format=auto",
     "fit=cover",
   ].join(",")
 
-  return `${SITE_ORIGIN}/cdn-cgi/image/${params}/${src}`
+  return `${SITE_ORIGIN}/cdn-cgi/image/${params}/https://${normalizedSrc}`
 }
 
 export default cfImageLoader

@@ -71,16 +71,16 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
         )}
       </div>
 
-      {/* Desktop: Main image + thumbnail strip */}
+      {/* Desktop: Main image 1:1 + thumbnail strip */}
       <div className="hidden small:block">
-        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-rounded bg-ui-bg-subtle">
+        <div className="relative aspect-square w-full overflow-hidden rounded-rounded bg-ui-bg-subtle">
           {images[selectedIndex]?.url && (
             <ResponsiveImage
               src={images[selectedIndex].url}
               alt={`Product image ${selectedIndex + 1}`}
               fill
               priority
-              sizes="(max-width: 1280px) 50vw, 600px"
+              sizes="(max-width: 1280px) 50vw, 1000px"
               className="object-cover"
             />
           )}
@@ -91,7 +91,7 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
               <button
                 key={image.id}
                 onClick={() => setSelectedIndex(index)}
-                className={`relative w-16 h-20 rounded-rounded overflow-hidden border-2 transition-colors ${
+                className={`relative w-16 h-16 rounded-rounded overflow-hidden border-2 transition-colors ${
                   index === selectedIndex
                     ? "border-ui-border-interactive"
                     : "border-transparent"
