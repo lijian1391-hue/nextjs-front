@@ -152,67 +152,73 @@ export default function ProductActions({
 
     setIsAdding(true)
 
-    try {
-      const price = (selectedVariant as any)?.calculated_price?.calculated_amount
-      const currencyCode = (selectedVariant as any)?.calculated_price?.currency_code
+    const price = (selectedVariant as any)?.calculated_price?.calculated_amount
+    const currencyCode = (selectedVariant as any)?.calculated_price?.currency_code
+    const variantId = selectedVariant.id
 
-      await quickOrder({
-        variantId: selectedVariant.id,
-        quantity,
-        countryCode,
-      })
-
-      // Track AddToCart
-      const addEventId = `${selectedVariant.id}_AddToCart_${Date.now()}`
-
-      rudderAnalytics.track("Product Added", {
-        product_id: product.id,
-        sku: selectedVariant?.sku,
-        name: product.title,
-        price: price ? price / 100 : undefined,
-        currency: currencyCode,
-        quantity,
-      })
-
-      trackPixel("AddToCart", {
-        content_ids: [product.id],
-        content_type: "product",
-        value: price ? (price / 100) * quantity : undefined,
-        currency: currencyCode,
-        contents: [{ id: product.id, quantity }],
-      }, addEventId)
-
-      // Track InitiateCheckout
-      const checkoutEventId = `${selectedVariant.id}_InitiateCheckout_${Date.now()}`
-
-      rudderAnalytics.track("Checkout Started", {
-        revenue: price ? (price / 100) * quantity : undefined,
-        currency: currencyCode,
-        products: [
-          {
-            product_id: product.id,
-            quantity,
-            price: price ? price / 100 : undefined,
-          },
-        ],
-      })
-
-      trackPixel("InitiateCheckout", {
-        value: price ? (price / 100) * quantity : undefined,
-        currency: currencyCode,
-        content_ids: [product.id],
-        content_type: "product",
-        contents: [{ id: product.id, quantity, item_price: price ? price / 100 : undefined }],
-        num_items: quantity,
-      }, checkoutEventId)
-
-      router.push(`/${countryCode}/checkout`)
-    } catch (error) {
+    // Fire and forget: redirect immediately, create cart in background
+    quickOrder({
+      variantId,
+      quantity,
+      countryCode,
+    }).catch((error) => {
       console.error("[quickOrder] Error:", error)
-    } finally {
-      setIsAdding(false)
-    }
-  }, [selectedVariant, quantity, countryCode, router, product.id, product.title])
+      // Store error for checkout page to display
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("quickOrderError", JSON.stringify({
+          message: error instanceof Error ? error.message : "Failed to add item to cart",
+          variantId,
+          quantity,
+          countryCode,
+        }))
+      }
+    })
+
+    // Track events immediately
+    const addEventId = `${variantId}_AddToCart_${Date.now()}`
+    rudderAnalytics.track("Product Added", {
+      product_id: product.id,
+      sku: selectedVariant?.sku,
+      name: product.title,
+      price: price ? price / 100 : undefined,
+      currency: currencyCode,
+      quantity,
+    })
+
+    trackPixel("AddToCart", {
+      content_ids: [product.id],
+      content_type: "product",
+      value: price ? (price / 100) * quantity : undefined,
+      currency: currencyCode,
+      contents: [{ id: product.id, quantity }],
+    }, addEventId)
+
+    const checkoutEventId = `${variantId}_InitiateCheckout_${Date.now()}`
+    rudderAnalytics.track("Checkout Started", {
+      revenue: price ? (price / 100) * quantity : undefined,
+      currency: currencyCode,
+      products: [
+        {
+          product_id: product.id,
+          quantity,
+          price: price ? price / 100 : undefined,
+        },
+      ],
+    })
+
+    trackPixel("InitiateCheckout", {
+      value: price ? (price / 100) * quantity : undefined,
+      currency: currencyCode,
+      content_ids: [product.id],
+      content_type: "product",
+      contents: [{ id: product.id, quantity, item_price: price ? price / 100 : undefined }],
+      num_items: quantity,
+    }, checkoutEventId)
+
+    router.push(`/${countryCode}/checkout`)
+
+    setIsAdding(false)
+  }, [selectedVariant, quantity, countryCode, router, product])
 
   // Prefetch checkout page on hover so navigation is instant
   const prefetchCheckout = useCallback(() => {

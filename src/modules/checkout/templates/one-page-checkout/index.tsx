@@ -1,6 +1,6 @@
 "use client"
 
-import { initiatePaymentSession, setShippingMethod } from "@lib/data/cart"
+import { setAddresses } from "@lib/data/cart"
 import { paymentInfoMap } from "@lib/constants"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
@@ -9,8 +9,7 @@ import Divider from "@modules/common/components/divider"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import ItemsPreviewTemplate from "@modules/cart/templates/preview"
 import ShippingAddress from "@modules/checkout/components/shipping-address"
-import { setAddresses } from "@lib/data/cart"
-import { useActionState, useEffect, useState } from "react"
+import { useActionState, useEffect } from "react"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import { useRouter } from "next/navigation"
 
@@ -40,41 +39,26 @@ export default function OnePageCheckout({
     ? paymentInfoMap[availablePaymentMethods[0].id]?.title || availablePaymentMethods[0].id
     : "Not available"
 
-  // Auto-select shipping method and payment on mount
+  // Initialize cart via API route (non-blocking, fires in background)
   useEffect(() => {
-    const autoSelect = async () => {
-      try {
-        if (
-          availableShippingMethods?.length &&
-          (cart.shipping_methods?.length ?? 0) === 0
-        ) {
-          const firstMethod = availableShippingMethods.find(
-            (sm: any) => sm.service_zone?.fulfillment_set?.type !== "pickup"
-          ) || availableShippingMethods[0]
+    const needsShipping = availableShippingMethods?.length && !(cart.shipping_methods?.length ?? 0)
+    const needsPayment = !activePaymentSession && availablePaymentMethods?.length
 
-          if (firstMethod) {
-            await setShippingMethod({
-              cartId: cart.id,
-              shippingMethodId: firstMethod.id,
-            })
-          }
-        }
+    if (!needsShipping && !needsPayment) return
 
-        const session = cart.payment_collection?.payment_sessions?.find(
-          (s: any) => s.status === "pending"
-        )
+    const firstMethod = availableShippingMethods?.find(
+      (sm: any) => sm.service_zone?.fulfillment_set?.type !== "pickup"
+    ) || availableShippingMethods?.[0]
 
-        if (!session && availablePaymentMethods?.length) {
-          await initiatePaymentSession(cart, {
-            provider_id: availablePaymentMethods[0].id,
-          })
-        }
-      } catch (e: any) {
-        console.error("[autoSelect] Error:", e.message)
-      }
-    }
-
-    autoSelect()
+    fetch("/api/init-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cartId: cart.id,
+        shippingMethodId: needsShipping ? firstMethod?.id : undefined,
+        paymentProviderId: needsPayment ? availablePaymentMethods?.[0].id : undefined,
+      }),
+    }).catch((e) => console.error("[init-checkout] Error:", e))
   }, [])
 
   return (

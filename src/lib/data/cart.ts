@@ -30,7 +30,7 @@ export async function clearCart() {
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
   fields ??=
-    "*items, *region, *items.product, *items.product.thumbnail, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+    "*items,+items.total,*items.variant,*items.variant.product,*items.variant.product.images,*items.variant.product.thumbnail,*items.thumbnail,*items.metadata,*promotions,*region,+shipping_methods.name"
 
   if (!id) {
     return null

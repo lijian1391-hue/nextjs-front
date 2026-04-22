@@ -3,18 +3,23 @@ import { retrieveCart } from "@lib/data/cart"
 import { listCartPaymentMethods } from "@lib/data/payment"
 import { retrieveCustomer } from "@lib/data/customer"
 import OnePageCheckout from "@modules/checkout/templates/one-page-checkout"
+import CheckoutContent from "@modules/checkout/components/checkout-content"
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
+
+type Props = {
+  params: Promise<{ countryCode: string }>
+}
 
 export const metadata: Metadata = {
   title: "Checkout",
 }
 
-export default async function Checkout() {
+export default async function Checkout({ params }: Props) {
+  const { countryCode } = await params
   const cart = await retrieveCart()
 
   if (!cart) {
-    return notFound()
+    return <CheckoutContent countryCode={countryCode} hasCart={false} />
   }
 
   const [customer, shippingMethods, paymentMethods] = await Promise.all([
@@ -24,7 +29,9 @@ export default async function Checkout() {
   ])
 
   return (
-    <OnePageCheckout
+    <CheckoutContent
+      countryCode={countryCode}
+      hasCart={true}
       cart={cart}
       customer={customer}
       availableShippingMethods={shippingMethods}
