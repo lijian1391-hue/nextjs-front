@@ -11,6 +11,7 @@ import ProductPrice from "../product-price"
 import MobileCtaBar from "../mobile-cta-bar"
 import { useRouter } from "next/navigation"
 import { rudderAnalytics } from "@lib/util/rudderstack"
+import { trackPixel } from "@lib/util/pixel"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -68,6 +69,8 @@ export default function ProductActions({
     const price = (selectedVariant as any)?.calculated_price?.calculated_amount
     const currencyCode = (selectedVariant as any)?.calculated_price?.currency_code
 
+    const eventId = `${selectedVariant.id}_ViewContent_${Date.now()}`
+
     rudderAnalytics.track("Product Viewed", {
       product_id: product.id,
       sku: selectedVariant.sku,
@@ -77,6 +80,13 @@ export default function ProductActions({
       url: typeof window !== "undefined" ? window.location.href : undefined,
       image_url: product.thumbnail,
     })
+
+    trackPixel("ViewContent", {
+      content_ids: [product.id],
+      content_type: "product",
+      value: price ? price / 100 : undefined,
+      currency: currencyCode,
+    }, eventId)
   }, [selectedVariant, product.id, product.title, product.thumbnail])
 
   const setOptionValue = (optionId: string, value: string) => {
@@ -142,6 +152,8 @@ export default function ProductActions({
       })
 
       // Track AddToCart
+      const addEventId = `${selectedVariant.id}_AddToCart_${Date.now()}`
+
       rudderAnalytics.track("Product Added", {
         product_id: product.id,
         sku: selectedVariant?.sku,
@@ -151,7 +163,17 @@ export default function ProductActions({
         quantity,
       })
 
+      trackPixel("AddToCart", {
+        content_ids: [product.id],
+        content_type: "product",
+        value: price ? (price / 100) * quantity : undefined,
+        currency: currencyCode,
+        contents: [{ id: product.id, quantity }],
+      }, addEventId)
+
       // Track InitiateCheckout
+      const checkoutEventId = `${selectedVariant.id}_InitiateCheckout_${Date.now()}`
+
       rudderAnalytics.track("Checkout Started", {
         revenue: price ? (price / 100) * quantity : undefined,
         currency: currencyCode,
@@ -163,6 +185,15 @@ export default function ProductActions({
           },
         ],
       })
+
+      trackPixel("InitiateCheckout", {
+        value: price ? (price / 100) * quantity : undefined,
+        currency: currencyCode,
+        content_ids: [product.id],
+        content_type: "product",
+        contents: [{ id: product.id, quantity, item_price: price ? price / 100 : undefined }],
+        num_items: quantity,
+      }, checkoutEventId)
 
       router.push(`/${countryCode}/checkout`)
     } catch (error) {

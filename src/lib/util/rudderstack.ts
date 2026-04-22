@@ -1,4 +1,5 @@
 import { RudderAnalytics } from "@rudderstack/analytics-js"
+import { initPixels } from "./pixel"
 
 const writeKey = process.env.NEXT_PUBLIC_RS_WRITE_KEY
 const dataPlaneUrl = process.env.NEXT_PUBLIC_RS_DATA_PLANE_URL
@@ -15,6 +16,8 @@ class RudderStackAnalytics {
       integrations: { All: true },
     })
     this.loaded = true
+
+    initPixels()
   }
 
   isLoaded(): boolean {

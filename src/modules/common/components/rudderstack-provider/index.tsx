@@ -3,12 +3,12 @@
 import { Suspense, useEffect } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { rudderAnalytics } from "@lib/util/rudderstack"
+import { trackPixelPageView } from "@lib/util/pixel"
 
 function RudderstackPageTracker() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // Track page view on every route change
   useEffect(() => {
     if (rudderAnalytics.isLoaded()) {
       const url =
@@ -18,6 +18,8 @@ function RudderstackPageTracker() {
         url: window.location.href,
       })
     }
+
+    trackPixelPageView()
   }, [pathname, searchParams])
 
   return null
