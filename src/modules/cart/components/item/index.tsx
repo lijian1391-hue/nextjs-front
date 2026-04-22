@@ -52,8 +52,8 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
           className="flex"
         >
           <Thumbnail
-            thumbnail={item.thumbnail}
-            images={item.variant?.product?.images}
+            thumbnail={item.thumbnail || item.product?.thumbnail}
+            images={item.product?.images}
             size="square"
           />
         </LocalizedClientLink>

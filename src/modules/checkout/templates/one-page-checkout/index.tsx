@@ -1,6 +1,5 @@
 "use client"
 
-import { initiatePaymentSession, setShippingMethod } from "@lib/data/cart"
 import { paymentInfoMap } from "@lib/constants"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
@@ -10,7 +9,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import ItemsPreviewTemplate from "@modules/cart/templates/preview"
 import ShippingAddress from "@modules/checkout/components/shipping-address"
 import { setAddresses } from "@lib/data/cart"
-import { useActionState, useEffect, useMemo, useState } from "react"
+import { useActionState } from "react"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import { useRouter } from "next/navigation"
 
@@ -30,7 +29,7 @@ export default function OnePageCheckout({
   const [message, formAction] = useActionState(setAddresses, null)
   const router = useRouter()
 
-  // Determine active payment info
+  // Determine active payment info (already initialized on server)
   const activePaymentSession = cart.payment_collection?.payment_sessions?.find(
     (s: any) => s.status === "pending"
   )
@@ -39,43 +38,6 @@ export default function OnePageCheckout({
     : availablePaymentMethods?.length
     ? paymentInfoMap[availablePaymentMethods[0].id]?.title || availablePaymentMethods[0].id
     : "Not available"
-
-  // Auto-select shipping method and payment on mount
-  useEffect(() => {
-    const autoSelect = async () => {
-      try {
-        if (
-          availableShippingMethods?.length &&
-          (cart.shipping_methods?.length ?? 0) === 0
-        ) {
-          const firstMethod = availableShippingMethods.find(
-            (sm) => sm.service_zone?.fulfillment_set?.type !== "pickup"
-          ) || availableShippingMethods[0]
-
-          if (firstMethod) {
-            await setShippingMethod({
-              cartId: cart.id,
-              shippingMethodId: firstMethod.id,
-            })
-          }
-        }
-
-        const activeSession = cart.payment_collection?.payment_sessions?.find(
-          (s: any) => s.status === "pending"
-        )
-
-        if (!activeSession && availablePaymentMethods?.length) {
-          await initiatePaymentSession(cart, {
-            provider_id: availablePaymentMethods[0].id,
-          })
-        }
-      } catch (e: any) {
-        console.error("[autoSelect] Error:", e.message)
-      }
-    }
-
-    autoSelect()
-  }, [])
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 py-6 small:py-12">

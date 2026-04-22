@@ -26,10 +26,11 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   return (
     <Container
       className={clx(
-        "relative w-full overflow-hidden bg-ui-bg-subtle shadow-elevation-card-rest rounded-large group-hover:shadow-elevation-card-hover transition-shadow ease-in-out duration-150",
+        "relative overflow-hidden bg-ui-bg-subtle shadow-elevation-card-rest rounded-large group-hover:shadow-elevation-card-hover transition-shadow ease-in-out duration-150",
         className,
         {
-          "aspect-square": true,
+          "aspect-square max-w-[120px]": size === "square",
+          "aspect-square": size !== "square",
           "max-w-[180px]": size === "small",
           "max-w-[290px]": size === "medium",
           "max-w-[440px]": size === "large",

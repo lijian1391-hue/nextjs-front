@@ -71,7 +71,6 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
           <Price amount={total ?? 0} currency_code={currency_code} />
         </span>
       </div>
-      <div className="h-px w-full border-b border-gray-200 mt-4" />
     </div>
   )
 }
