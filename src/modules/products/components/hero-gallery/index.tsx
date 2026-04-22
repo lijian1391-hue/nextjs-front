@@ -13,7 +13,7 @@ const MobileCarousel = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="relative w-full overflow-hidden bg-ui-bg-subtle aspect-video" />
+      <div className="relative w-full overflow-hidden bg-ui-bg-subtle aspect-square" />
     ),
   }
 )
@@ -32,8 +32,7 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
   if (!images || images.length === 0) {
     return (
       <div
-        className="w-full bg-ui-bg-subtle flex items-center justify-center"
-        style={{ aspectRatio: "16/9" }}
+        className="w-full bg-ui-bg-subtle flex items-center justify-center aspect-square"
       >
         <span className="text-ui-fg-muted">No image</span>
       </div>

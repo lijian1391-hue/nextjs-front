@@ -25,8 +25,7 @@ const cfImageLoader: ImageLoader = ({ src, width, quality }) => {
     `width=${width}`,
     "quality=80",
     "format=auto",
-    "fit=contain",
-    "background=white",
+    "fit=cover",
   ].join(",")
 
   return `${SITE_ORIGIN}/cdn-cgi/image/${params}/https://${normalizedSrc}`

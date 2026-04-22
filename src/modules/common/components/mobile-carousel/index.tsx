@@ -18,7 +18,7 @@ export default function MobileCarousel({ images }: MobileCarouselProps) {
       pagination={{ clickable: true }}
       spaceBetween={0}
       slidesPerView={1}
-      className="w-full aspect-video"
+      className="w-full aspect-square"
     >
       {images.map((image, index) => (
         <SwiperSlide key={image.id}>
@@ -29,7 +29,7 @@ export default function MobileCarousel({ images }: MobileCarouselProps) {
               fill
               priority={index === 0}
               sizes="100vw"
-              className="object-contain"
+              className="object-cover"
             />
           </div>
         </SwiperSlide>
