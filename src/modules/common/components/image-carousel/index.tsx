@@ -20,10 +20,7 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
     >
       {images.map((image, index) => (
         <SwiperSlide key={image.id}>
-          <div
-            className="relative w-full overflow-hidden bg-ui-bg-subtle"
-            style={{ aspectRatio: "16/9" }}
-          >
+          <div className="relative w-full overflow-hidden bg-ui-bg-subtle">
             <ResponsiveImage
               src={image.url!}
               alt={`Product image ${index + 1}`}

@@ -13,10 +13,7 @@ const MobileCarousel = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div
-        className="relative w-full overflow-hidden bg-ui-bg-subtle"
-        style={{ aspectRatio: "16/9" }}
-      />
+      <div className="relative w-full overflow-hidden bg-ui-bg-subtle aspect-square" />
     ),
   }
 )
@@ -45,17 +42,14 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
 
   return (
     <div>
-      {/* Mobile: Swiper carousel, main image 16:9 */}
+      {/* Mobile: Swiper carousel */}
       <div className="block small:hidden">
         <MobileCarousel images={images} />
       </div>
 
       {/* Desktop: Main image 1:1 + thumbnail strip */}
       <div className="hidden small:block">
-        <div
-          className="relative w-full overflow-hidden rounded-rounded bg-ui-bg-subtle"
-          style={{ aspectRatio: "1/1" }}
-        >
+        <div className="relative w-full overflow-hidden rounded-rounded bg-ui-bg-subtle aspect-square">
           {images[selectedIndex]?.url && (
             <ResponsiveImage
               src={images[selectedIndex].url}
