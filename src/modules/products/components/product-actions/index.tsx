@@ -17,6 +17,8 @@ type ProductActionsProps = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
   disabled?: boolean
+  /** Initial variant ID from URL searchParams.v_id, passed from server to avoid extra render */
+  initialVariantId?: string
 }
 
 const optionsAsKeymap = (
@@ -31,24 +33,40 @@ const optionsAsKeymap = (
 export default function ProductActions({
   product,
   disabled,
+  initialVariantId,
 }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-
-  const [options, setOptions] = useState<Record<string, string | undefined>>({})
-  const [quantity, setQuantity] = useState(1)
-  const [isAdding, setIsAdding] = useState(false)
   const countryCode = useParams().countryCode as string
   const viewedRef = useRef(false)
 
-  // Auto-select the first variant on load
-  useEffect(() => {
-    if (product.variants?.length && Object.keys(options).length === 0) {
-      const variantOptions = optionsAsKeymap(product.variants[0].options)
-      setOptions(variantOptions ?? {})
+  // Initialize options from initialVariantId; fall back to first variant if no v_id in URL
+  const getInitialOptions = (): Record<string, string | undefined> => {
+    if (initialVariantId && product.variants?.length) {
+      const variant = product.variants.find((v) => v.id === initialVariantId)
+      if (variant) return optionsAsKeymap(variant.options)
     }
-  }, [product.variants])
+    // No v_id in URL: auto-select first variant so initial render matches final state
+    if (product.variants?.length) {
+      return optionsAsKeymap(product.variants[0].options)
+    }
+    return {}
+  }
+
+  const [options, setOptions] = useState<Record<string, string | undefined>>(
+    getInitialOptions
+  )
+  const [quantity, setQuantity] = useState(1)
+  const [isAdding, setIsAdding] = useState(false)
+
+  // User-initiated option changes (not initialization)
+  const setOptionValue = (optionId: string, value: string) => {
+    setOptions((prev) => ({
+      ...prev,
+      [optionId]: value,
+    }))
+  }
 
   const selectedVariant = useMemo(() => {
     if (!product.variants || product.variants.length === 0) {
@@ -88,13 +106,6 @@ export default function ProductActions({
       currency: currencyCode,
     }, eventId)
   }, [selectedVariant, product.id, product.title, product.thumbnail])
-
-  const setOptionValue = (optionId: string, value: string) => {
-    setOptions((prev) => ({
-      ...prev,
-      [optionId]: value,
-    }))
-  }
 
   const isValidVariant = useMemo(() => {
     return product.variants?.some((v) => {

@@ -13,7 +13,7 @@ const MobileCarousel = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="relative w-full overflow-hidden bg-ui-bg-subtle aspect-square" />
+      <div className="relative w-full overflow-hidden bg-ui-bg-subtle aspect-video" />
     ),
   }
 )

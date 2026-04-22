@@ -18,11 +18,11 @@ export default function MobileCarousel({ images }: MobileCarouselProps) {
       pagination={{ clickable: true }}
       spaceBetween={0}
       slidesPerView={1}
-      className="w-full"
+      className="w-full aspect-video"
     >
       {images.map((image, index) => (
         <SwiperSlide key={image.id}>
-          <div className="relative w-full overflow-hidden bg-ui-bg-subtle">
+          <div className="relative w-full h-full overflow-hidden bg-ui-bg-subtle">
             <ResponsiveImage
               src={image.url!}
               alt={`Product image ${index + 1}`}
