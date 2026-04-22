@@ -11,23 +11,21 @@ export async function POST(req: NextRequest) {
 
     if (shippingMethodId) {
       tasks.push(
-        sdk.store.cart.addShippingMethod(
-          cartId,
-          { option_id: shippingMethodId },
-          {},
-          headers
-        )
+        sdk.client.fetch(`/store/carts/${cartId}/shipping-methods`, {
+          method: "POST",
+          body: { option_id: shippingMethodId },
+          headers,
+        })
       )
     }
 
     if (paymentProviderId) {
       tasks.push(
-        sdk.store.payment.initiatePaymentSession(
-          { cart_id: cartId } as any,
-          { provider_id: paymentProviderId },
-          {},
-          headers
-        )
+        sdk.client.fetch(`/store/payment/sessions`, {
+          method: "POST",
+          body: { provider_id: paymentProviderId, cart_id: cartId },
+          headers,
+        })
       )
     }
 

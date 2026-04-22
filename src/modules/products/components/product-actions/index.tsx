@@ -40,6 +40,7 @@ export default function ProductActions({
   const searchParams = useSearchParams()
   const countryCode = useParams().countryCode as string
   const viewedRef = useRef(false)
+  const isAddingRef = useRef(false)
 
   // Initialize options from initialVariantId; fall back to first variant if no v_id in URL
   const getInitialOptions = (): Record<string, string | undefined> => {
@@ -148,8 +149,9 @@ export default function ProductActions({
   }, [selectedVariant])
 
   const handleAddToCart = useCallback(async () => {
-    if (!selectedVariant?.id) return null
+    if (!selectedVariant?.id || isAddingRef.current) return null
 
+    isAddingRef.current = true
     setIsAdding(true)
 
     const price = (selectedVariant as any)?.calculated_price?.calculated_amount

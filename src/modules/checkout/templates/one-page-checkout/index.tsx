@@ -5,11 +5,10 @@ import { paymentInfoMap } from "@lib/constants"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
 import CartTotals from "@modules/common/components/cart-totals"
-import Divider from "@modules/common/components/divider"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import ItemsPreviewTemplate from "@modules/cart/templates/preview"
 import ShippingAddress from "@modules/checkout/components/shipping-address"
-import { useActionState, useEffect } from "react"
+import { useActionState, useEffect, useState } from "react"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import { useRouter } from "next/navigation"
 
@@ -27,9 +26,9 @@ export default function OnePageCheckout({
   availablePaymentMethods,
 }: OnePageCheckoutProps) {
   const [message, formAction] = useActionState(setAddresses, null)
+  const [initError, setInitError] = useState<string | null>(null)
   const router = useRouter()
 
-  // Determine active payment info
   const activePaymentSession = cart.payment_collection?.payment_sessions?.find(
     (s: any) => s.status === "pending"
   )
@@ -39,7 +38,6 @@ export default function OnePageCheckout({
     ? paymentInfoMap[availablePaymentMethods[0].id]?.title || availablePaymentMethods[0].id
     : "Not available"
 
-  // Initialize cart via API route (non-blocking, fires in background)
   useEffect(() => {
     const needsShipping = availableShippingMethods?.length && !(cart.shipping_methods?.length ?? 0)
     const needsPayment = !activePaymentSession && availablePaymentMethods?.length
@@ -58,7 +56,14 @@ export default function OnePageCheckout({
         shippingMethodId: needsShipping ? firstMethod?.id : undefined,
         paymentProviderId: needsPayment ? availablePaymentMethods?.[0].id : undefined,
       }),
-    }).catch((e) => console.error("[init-checkout] Error:", e))
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.ok) {
+          setInitError(data.error || "Failed to initialize checkout")
+        }
+      })
+      .catch((e) => setInitError(e.message || "Network error"))
   }, [])
 
   return (
@@ -71,13 +76,35 @@ export default function OnePageCheckout({
         ← Back
       </button>
 
+      {/* Init error banner */}
+      {initError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-red-100 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <p className="text-sm text-red-700 mb-4">Something went wrong. Please go back and try again.</p>
+          <button
+            onClick={() => router.back()}
+            className="px-6 py-2 bg-jumia-orange text-white rounded-md text-sm font-medium hover:bg-jumia-orange-hover transition-colors"
+          >
+            Go Back to Product
+          </button>
+        </div>
+      )}
+
+      {!initError && (
+        <>
+
       {/* 1. Order items */}
       <div>
         <Heading level="h2" className="text-2xl-regular mb-4">
           Order Summary
         </Heading>
         <ItemsPreviewTemplate cart={cart} />
-        <Divider />
       </div>
 
       {/* 2. Notice */}
@@ -110,10 +137,8 @@ export default function OnePageCheckout({
           onChange={() => {}}
         />
 
-        <Divider className="my-6" />
-
         {/* 4. Order totals + payment method */}
-        <div>
+        <div className="mt-6">
           <Heading level="h3" className="text-xl-regular mb-4">
             Order Total
           </Heading>
@@ -126,10 +151,8 @@ export default function OnePageCheckout({
           </div>
         </div>
 
-        <Divider className="my-6" />
-
         {/* 5. Confirm button */}
-        <div className="pb-8">
+        <div className="pb-8 mt-6">
           <SubmitButton
             className="w-full h-12 text-base-regular"
             data-testid="confirm-order-button"
@@ -146,6 +169,8 @@ export default function OnePageCheckout({
             <span>Secure Payment</span>
           </div>
         </div>
+      </>
+      )}
       </form>
     </div>
   )
