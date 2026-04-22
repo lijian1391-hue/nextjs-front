@@ -10,10 +10,6 @@ export const paymentInfoMap: Record<
   string,
   { title: string; icon: React.JSX.Element }
 > = {
-  pp_stripe_stripe: {
-    title: "Credit card",
-    icon: <CreditCard />,
-  },
   "pp_medusa-payments_default": {
     title: "Credit card",
     icon: <CreditCard />,
@@ -35,13 +31,6 @@ export const paymentInfoMap: Record<
     icon: <CreditCard />,
   },
   // Add more payment providers here
-}
-
-// This only checks if it is native stripe or medusa payments for card payments, it ignores the other stripe-based providers
-export const isStripeLike = (providerId?: string) => {
-  return (
-    providerId?.startsWith("pp_stripe_") || providerId?.startsWith("pp_medusa-")
-  )
 }
 
 export const isPaypal = (providerId?: string) => {

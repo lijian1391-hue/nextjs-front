@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { cache } from "react"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
@@ -9,6 +10,21 @@ type Props = {
   params: Promise<{ countryCode: string; handle: string }>
   searchParams: Promise<{ v_id?: string }>
 }
+
+// Cache expensive calls — Next.js deduplicates fetch with identical keys
+const cachedGetRegion = cache(getRegion)
+const cachedListProducts = cache(
+  async (
+    countryCode: string,
+    handle: string
+  ): Promise<HttpTypes.StoreProduct | undefined> => {
+    const { response } = await listProducts({
+      countryCode,
+      queryParams: { handle },
+    })
+    return response.products[0]
+  }
+)
 
 export async function generateStaticParams() {
   try {
@@ -71,17 +87,13 @@ function getImagesForVariant(
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
-  const { handle } = params
-  const region = await getRegion(params.countryCode)
+  const region = await cachedGetRegion(params.countryCode)
 
   if (!region) {
     notFound()
   }
 
-  const product = await listProducts({
-    countryCode: params.countryCode,
-    queryParams: { handle },
-  }).then(({ response }) => response.products[0])
+  const product = await cachedListProducts(params.countryCode, params.handle)
 
   if (!product) {
     notFound()
@@ -100,24 +112,20 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function ProductPage(props: Props) {
   const params = await props.params
-  const region = await getRegion(params.countryCode)
+  const region = await cachedGetRegion(params.countryCode)
   const searchParams = await props.searchParams
-
-  const selectedVariantId = searchParams.v_id
 
   if (!region) {
     notFound()
   }
 
-  const pricedProduct = await listProducts({
-    countryCode: params.countryCode,
-    queryParams: { handle: params.handle },
-  }).then(({ response }) => response.products[0])
+  const pricedProduct = await cachedListProducts(params.countryCode, params.handle)
 
   if (!pricedProduct) {
     notFound()
   }
 
+  const selectedVariantId = searchParams.v_id
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
 
   return (

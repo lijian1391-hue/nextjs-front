@@ -2,7 +2,6 @@ import { listCartShippingMethods } from "@lib/data/fulfillment"
 import { retrieveCart } from "@lib/data/cart"
 import { listCartPaymentMethods } from "@lib/data/payment"
 import { retrieveCustomer } from "@lib/data/customer"
-import PaymentWrapper from "@modules/checkout/components/payment-wrapper"
 import OnePageCheckout from "@modules/checkout/templates/one-page-checkout"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
@@ -23,13 +22,11 @@ export default async function Checkout() {
   const paymentMethods = await listCartPaymentMethods(cart.region?.id ?? "")
 
   return (
-    <PaymentWrapper cart={cart}>
-      <OnePageCheckout
-        cart={cart}
-        customer={customer}
-        availableShippingMethods={shippingMethods}
-        availablePaymentMethods={paymentMethods}
-      />
-    </PaymentWrapper>
+    <OnePageCheckout
+      cart={cart}
+      customer={customer}
+      availableShippingMethods={shippingMethods}
+      availablePaymentMethods={paymentMethods}
+    />
   )
 }

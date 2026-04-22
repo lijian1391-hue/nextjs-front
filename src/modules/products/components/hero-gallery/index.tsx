@@ -3,10 +3,23 @@
 import { HttpTypes } from "@medusajs/types"
 import ResponsiveImage from "@modules/common/components/responsive-image"
 import { useEffect, useState } from "react"
-import { Swiper, SwiperSlide } from "swiper/react"
-import { Pagination } from "swiper/modules"
-import "swiper/css"
-import "swiper/css/pagination"
+import dynamic from "next/dynamic"
+
+const MobileCarousel = dynamic(
+  () =>
+    import("@modules/common/components/mobile-carousel").then(
+      (m) => m.default
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="relative w-full overflow-hidden bg-ui-bg-subtle"
+        style={{ aspectRatio: "16/9" }}
+      />
+    ),
+  }
+)
 
 type HeroGalleryProps = {
   images: HttpTypes.StoreProductImage[]
@@ -21,43 +34,20 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
 
   if (!images || images.length === 0) {
     return (
-      <div className="w-full bg-ui-bg-subtle flex items-center justify-center" style={{ aspectRatio: "16/9" }}>
+      <div
+        className="w-full bg-ui-bg-subtle flex items-center justify-center"
+        style={{ aspectRatio: "16/9" }}
+      >
         <span className="text-ui-fg-muted">No image</span>
       </div>
     )
   }
 
-  const singleImage = images.length === 1
-
   return (
     <div>
       {/* Mobile: Swiper carousel, main image 16:9 */}
       <div className="block small:hidden">
-        <Swiper
-          modules={[Pagination]}
-          pagination={{ clickable: true }}
-          spaceBetween={0}
-          slidesPerView={1}
-          className="w-full"
-        >
-          {images.map((image, index) => (
-            <SwiperSlide key={image.id}>
-              <div
-                className="relative w-full overflow-hidden bg-ui-bg-subtle"
-                style={{ aspectRatio: "16/9" }}
-              >
-                <ResponsiveImage
-                  src={image.url!}
-                  alt={`Product image ${index + 1}`}
-                  fill
-                  priority={index === 0}
-                  sizes="100vw"
-                  className="object-contain"
-                />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        <MobileCarousel images={images} />
       </div>
 
       {/* Desktop: Main image 1:1 + thumbnail strip */}
