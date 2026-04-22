@@ -1,7 +1,6 @@
 import React, { Suspense } from "react"
 
 import HeroGallery from "@modules/products/components/hero-gallery"
-import ProductActions from "@modules/products/components/product-actions"
 import ProductDescription from "@modules/products/components/product-description"
 import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
 import ProductTabs from "@modules/products/components/product-tabs"
@@ -10,6 +9,7 @@ import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
 import ProductActionsWrapper from "./product-actions-wrapper"
+import ProductActionsSkeleton from "./product-actions-wrapper/ProductActionsSkeleton"
 import Divider from "@modules/common/components/divider"
 
 type ProductTemplateProps = {
