@@ -13,16 +13,15 @@ type HeroGalleryProps = {
 }
 
 const HeroGallery = ({ images }: HeroGalleryProps) => {
-  const [mounted, setMounted] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setSelectedIndex(0)
+  }, [images])
 
   if (!images || images.length === 0) {
     return (
-      <div className="aspect-square w-full bg-ui-bg-subtle flex items-center justify-center">
+      <div className="w-full bg-ui-bg-subtle flex items-center justify-center" style={{ aspectRatio: "16/9" }}>
         <span className="text-ui-fg-muted">No image</span>
       </div>
     )
@@ -32,48 +31,41 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
 
   return (
     <div>
-      {/* Mobile: Swiper carousel */}
+      {/* Mobile: Swiper carousel, main image 16:9 */}
       <div className="block small:hidden">
-        {singleImage || !mounted ? (
-          <div className="relative aspect-square w-full overflow-hidden bg-ui-bg-subtle">
-            <ResponsiveImage
-              src={images[0].url!}
-              alt="Product image"
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
-          </div>
-        ) : (
-          <Swiper
-            modules={[Pagination]}
-            pagination={{ clickable: true }}
-            spaceBetween={0}
-            slidesPerView={1}
-            className="w-full"
-          >
-            {images.map((image, index) => (
-              <SwiperSlide key={image.id}>
-                <div className="relative aspect-square w-full overflow-hidden bg-ui-bg-subtle">
-                  <ResponsiveImage
-                    src={image.url!}
-                    alt={`Product image ${index + 1}`}
-                    fill
-                    priority={index === 0}
-                    sizes="100vw"
-                    className="object-cover"
-                  />
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        )}
+        <Swiper
+          modules={[Pagination]}
+          pagination={{ clickable: true }}
+          spaceBetween={0}
+          slidesPerView={1}
+          className="w-full"
+        >
+          {images.map((image, index) => (
+            <SwiperSlide key={image.id}>
+              <div
+                className="relative w-full overflow-hidden bg-ui-bg-subtle"
+                style={{ aspectRatio: "16/9" }}
+              >
+                <ResponsiveImage
+                  src={image.url!}
+                  alt={`Product image ${index + 1}`}
+                  fill
+                  priority={index === 0}
+                  sizes="100vw"
+                  className="object-contain"
+                />
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
 
       {/* Desktop: Main image 1:1 + thumbnail strip */}
       <div className="hidden small:block">
-        <div className="relative aspect-square w-full overflow-hidden rounded-rounded bg-ui-bg-subtle">
+        <div
+          className="relative w-full overflow-hidden rounded-rounded bg-ui-bg-subtle"
+          style={{ aspectRatio: "1/1" }}
+        >
           {images[selectedIndex]?.url && (
             <ResponsiveImage
               src={images[selectedIndex].url}
@@ -81,7 +73,7 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
               fill
               priority
               sizes="(max-width: 1280px) 50vw, 1000px"
-              className="object-cover"
+              className="object-contain"
             />
           )}
         </div>

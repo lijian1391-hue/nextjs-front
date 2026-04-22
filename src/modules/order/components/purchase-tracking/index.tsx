@@ -19,7 +19,8 @@ export default function PurchaseTracking({ order }: PurchaseTrackingProps) {
     const eventId = `${order.id}_Purchase`
     const revenue = order.total ? order.total / 100 : undefined
     const currency = order.currency_code
-    const products = order.items?.map((item) => ({
+    const orderItems = order.items ?? []
+    const products = orderItems.map((item) => ({
       id: (item as any).product?.id || (item as any).variant?.id,
       item_id: (item as any).variant?.id,
       name: item.product_title,
@@ -29,20 +30,24 @@ export default function PurchaseTracking({ order }: PurchaseTrackingProps) {
     const contentIds = products.map((p) => p.id).filter(Boolean) as string[]
 
     // RudderStack — backend CAPI also sends Order Completed via RudderStack Node SDK
-    rudderAnalytics.track("Order Completed", {
-      order_id: order.id,
-      revenue,
-      currency,
-      products: order.items?.map((item) => ({
-        product_id: (item as any).product?.id,
-        sku: (item as any).variant?.sku,
-        name: item.product_title,
-        price: item.unit_price ? item.unit_price / 100 : undefined,
-        quantity: item.quantity,
-      })),
-      email: order.email,
-      event_id: eventId,
-    })
+    try {
+      rudderAnalytics.track("Order Completed", {
+        order_id: order.id,
+        revenue,
+        currency,
+        products: orderItems.map((item) => ({
+          product_id: (item as any).product?.id,
+          sku: (item as any).variant?.sku,
+          name: item.product_title,
+          price: item.unit_price ? item.unit_price / 100 : undefined,
+          quantity: item.quantity,
+        })),
+        email: order.email,
+        event_id: eventId,
+      })
+    } catch {
+      // RudderStack failure — non-critical, backend CAPI will cover it
+    }
 
     // Direct pixel SDKs — same eventId for platform deduplication
     trackPixel("Purchase", {
@@ -55,7 +60,7 @@ export default function PurchaseTracking({ order }: PurchaseTrackingProps) {
         quantity: p.quantity,
         item_price: p.price,
       })),
-      num_items: order.items?.reduce((sum, i) => sum + (i.quantity || 0), 0),
+      num_items: orderItems.reduce((sum, i) => sum + (i.quantity || 0), 0),
     }, eventId)
   }, [order.id])
 

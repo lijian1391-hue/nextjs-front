@@ -18,35 +18,19 @@ export const getAuthHeaders = async (): Promise<
   }
 }
 
+/**
+ * Fixed cache tag for server-side data cache invalidation.
+ * Does NOT depend on _medusa_cache_id cookie — works reliably in
+ * server components where cookies may not be available.
+ */
 export const getCacheTag = async (tag: string): Promise<string> => {
-  try {
-    const cookies = await nextCookies()
-    const cacheId = cookies.get("_medusa_cache_id")?.value
-
-    if (!cacheId) {
-      return ""
-    }
-
-    return `${tag}-${cacheId}`
-  } catch (error) {
-    return ""
-  }
+  return `storefront-${tag}`
 }
 
 export const getCacheOptions = async (
   tag: string
 ): Promise<{ tags: string[] } | {}> => {
-  if (typeof window !== "undefined") {
-    return {}
-  }
-
-  const cacheTag = await getCacheTag(tag)
-
-  if (!cacheTag) {
-    return {}
-  }
-
-  return { tags: [`${cacheTag}`] }
+  return { tags: [`storefront-${tag}`] }
 }
 
 export const setAuthToken = async (token: string) => {

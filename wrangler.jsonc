@@ -36,6 +36,8 @@
     "REVALIDATE_SECRET": "8f2e9d5a1b7c4e3f9a0d2b6c8e1f5a7d",
     "MEDUSA_CLOUD_S3_HOSTNAME": "https://images.afrylo.com",
     "MEDUSA_CLOUD_S3_PATHNAME": "/",
-    "NEXT_PUBLIC_CF_IMAGE_RESIZING": "true"
+    "NEXT_PUBLIC_CF_IMAGE_RESIZING": "true",
+    "CACHE_PURGE_ZONE_ID": "",
+    "CACHE_PURGE_API_TOKEN": ""
   }
 }

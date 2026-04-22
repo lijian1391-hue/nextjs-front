@@ -1,5 +1,6 @@
 /* ------------------------------------------------------------------ */
 /*  Unified ad-pixel loader — loads SDKs on demand, fires events      */
+/*  + localStorage retry queue for failed events                      */
 /* ------------------------------------------------------------------ */
 
 type PixelEventData = Record<string, unknown>
@@ -11,6 +12,77 @@ const GADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_ID || ""
 const TTQ_ID = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || ""
 
 let initialized = false
+
+/* ================================================================
+ *  0. Retry queue (localStorage-backed)
+ * ================================================================ */
+
+const STORAGE_KEY = "_medusa_pixel_queue"
+const MAX_RETRIES = 3
+
+interface QueuedEvent {
+  event: string
+  data: PixelEventData
+  eventId: string
+  retries: number
+  ts: number
+}
+
+function loadQueue(): QueuedEvent[] {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]")
+  } catch {
+    return []
+  }
+}
+
+function saveQueue(q: QueuedEvent[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(q))
+  } catch { /* storage full — drop silently */ }
+}
+
+function enqueue(event: string, data: PixelEventData, eventId: string) {
+  const q = loadQueue()
+  // Avoid duplicate entries for same eventId
+  if (q.some((e) => e.eventId === eventId)) return
+  q.push({ event, data, eventId, retries: 0, ts: Date.now() })
+  saveQueue(q)
+}
+
+function removeFromQueue(eventId: string) {
+  const q = loadQueue().filter((e) => e.eventId !== eventId)
+  saveQueue(q)
+}
+
+function markRetried(eventId: string) {
+  const q = loadQueue()
+  const entry = q.find((e) => e.eventId === eventId)
+  if (entry) entry.retries += 1
+  saveQueue(q)
+}
+
+/** Drain pending events on page load — called once from initPixels */
+function drainQueue() {
+  const q = loadQueue()
+  if (!q.length) return
+
+  const pending = q.filter((e) => e.retries < MAX_RETRIES)
+  for (const entry of pending) {
+    // Small stagger to avoid hammering
+    setTimeout(() => {
+      dispatchToAllPlatforms(entry.event, entry.data, entry.eventId)
+      removeFromQueue(entry.eventId)
+    }, 500 + Math.random() * 1500)
+  }
+
+  // Prune events that exceeded max retries
+  const pruned = q.filter((e) => e.retries >= MAX_RETRIES)
+  if (pruned.length) {
+    console.warn(`[pixel] dropping ${pruned.length} exhausted events`)
+    saveQueue(q.filter((e) => e.retries < MAX_RETRIES))
+  }
+}
 
 /* ================================================================
  *  1. SDK bootstrap (called once from rudderstack.ts)
@@ -27,14 +99,13 @@ function loadScript(src: string, id: string): Promise<void> {
     s.src = src
     s.async = true
     s.onload = () => resolve()
-    s.onerror = () => resolve() // don't block other pixels
+    s.onerror = () => resolve()
     document.head.appendChild(s)
   })
 }
 
 async function loadFacebook() {
   if (!FB_PIXEL_ID) return
-  /* fbq stub — filled by the real SDK */
   const w = window as any
   w.fbq =
     w.fbq ||
@@ -42,7 +113,7 @@ async function loadFacebook() {
       ;(w.fbq.queue = w.fbq.queue || []).push(args)
     }
   w.fbq("init", FB_PIXEL_ID)
-  w.fbq("track", "PageView") // Facebook requires initial PageView
+  w.fbq("track", "PageView")
   await loadScript(
     `https://connect.facebook.net/en_US/fbevents.js`,
     "fb-pixel-sdk"
@@ -88,10 +159,11 @@ async function loadTikTok() {
 export function initPixels() {
   if (initialized || typeof window === "undefined") return
   initialized = true
-  // Fire all SDK loads in parallel — non-blocking
   loadFacebook()
   loadGoogle()
   loadTikTok()
+  // Drain any previously failed events after SDKs have had time to load
+  setTimeout(drainQueue, 3000)
 }
 
 /* ================================================================
@@ -126,15 +198,35 @@ function ttqTrack(event: string, data: PixelEventData, eventId: string) {
   }
 }
 
+function dispatchToAllPlatforms(
+  event: string,
+  data: PixelEventData,
+  eventId: string
+) {
+  fbTrack(event, data, eventId)
+  gaTrack(event, data)
+  ttqTrack(event, data, eventId)
+}
+
+/**
+ * Fire event to all pixel platforms + persist to retry queue.
+ * If SDKs haven't loaded yet the event will be retried from queue.
+ */
 export function trackPixel(
   event: string,
   data: PixelEventData,
   eventId: string
 ) {
   if (typeof window === "undefined") return
-  fbTrack(event, data, eventId)
-  gaTrack(event, data)
-  ttqTrack(event, data, eventId)
+
+  try {
+    dispatchToAllPlatforms(event, data, eventId)
+    // Assume success — platforms queue internally if SDK still loading
+    removeFromQueue(eventId)
+  } catch {
+    // Persist for retry on next page load
+    enqueue(event, data, eventId)
+  }
 }
 
 /* ================================================================

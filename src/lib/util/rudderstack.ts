@@ -24,19 +24,19 @@ class RudderStackAnalytics {
     return this.loaded
   }
 
-  page(category: string, name: string, properties?: Record<string, unknown>) {
+  page(category: string, name: string, properties?: Record<string, unknown> | undefined) {
     if (!this.instance) return
-    this.instance.page(category, name, properties)
+    this.instance.page(category, name, properties as any)
   }
 
-  track(event: string, properties?: Record<string, unknown>) {
+  track(event: string, properties?: Record<string, unknown> | undefined) {
     if (!this.instance) return
-    this.instance.track(event, properties)
+    this.instance.track(event, properties as any)
   }
 
-  identify(userId: string, traits?: Record<string, unknown>) {
+  identify(userId: string, traits?: Record<string, unknown> | undefined) {
     if (!this.instance) return
-    this.instance.identify(userId, traits)
+    this.instance.identify(userId, traits as any)
   }
 }
 

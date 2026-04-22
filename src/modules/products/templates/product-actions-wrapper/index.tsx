@@ -1,22 +1,17 @@
-import { listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import ProductActions from "@modules/products/components/product-actions"
 
 /**
- * Fetches real time pricing for a product and renders the product actions component.
+ * Passes real-time product data to the client-side ProductActions component.
+ * The product is fetched once in page.tsx to avoid duplicate API calls.
  */
 export default async function ProductActionsWrapper({
-  id,
+  product,
   region,
 }: {
-  id: string
+  product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
 }) {
-  const product = await listProducts({
-    queryParams: { id: [id] },
-    regionId: region.id,
-  }).then(({ response }) => response.products[0])
-
   if (!product) {
     return null
   }
