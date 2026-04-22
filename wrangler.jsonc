@@ -37,7 +37,7 @@
     "MEDUSA_CLOUD_S3_HOSTNAME": "https://images.afrylo.com",
     "MEDUSA_CLOUD_S3_PATHNAME": "/",
     "NEXT_PUBLIC_CF_IMAGE_RESIZING": "true",
-    "CACHE_PURGE_ZONE_ID": "",
-    "CACHE_PURGE_API_TOKEN": ""
+    "CACHE_PURGE_ZONE_ID": "21a14e213dfc46c9c1ac8b414650bc50",
+    "CACHE_PURGE_API_TOKEN": "cfut_ppsMy5lqSSejDMopimOI7On1Vr0tkhdyFpKPlmUne819df5d"
   }
 }
