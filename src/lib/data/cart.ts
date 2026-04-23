@@ -16,6 +16,7 @@ import {
   clearPendingCartId,
 } from "./cookies"
 import { getRegion } from "./regions"
+import { getLocale } from "@lib/data/locale-actions"
 
 export async function clearCart() {
   await removeCartId()
