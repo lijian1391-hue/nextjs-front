@@ -16,7 +16,6 @@ import {
   clearPendingCartId,
 } from "./cookies"
 import { getRegion } from "./regions"
-import { getLocale } from "@lib/data/locale-actions"
 
 export async function clearCart() {
   await removeCartId()
@@ -43,27 +42,14 @@ export async function retrieveCart(cartId?: string, fields?: string) {
     ...(await getAuthHeaders()),
   }
 
-  // Bypass Next.js Data Cache by using native fetch with cache: "no-store"
-  // This ensures checkout page always gets fresh cart data
-  const baseUrl = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
-  const response = await fetch(
-    `${baseUrl}/store/carts/${id}?fields=${encodeURIComponent(fields)}`,
-    {
+  return sdk.client
+    .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
       method: "GET",
-      headers: {
-        ...headers,
-        "x-medusa-locale": (await getLocale()) || "en",
-      },
-      cache: "no-store",
-    }
-  )
-
-  if (!response.ok) {
-    return null
-  }
-
-  const data: HttpTypes.StoreCartResponse = await response.json()
-  return data.cart
+      query: { fields },
+      headers,
+    })
+    .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+    .catch(() => null)
 }
 
 export async function getOrSetCart(countryCode: string) {
