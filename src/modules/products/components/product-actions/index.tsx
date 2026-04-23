@@ -1,6 +1,7 @@
 "use client"
 
 import { quickOrder } from "@lib/data/cart"
+import { setCartId } from "@lib/data/cookies"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
@@ -218,8 +219,7 @@ export default function ProductActions({
     }, checkoutEventId)
 
     router.push(`/${countryCode}/checkout`)
-
-    setIsAdding(false)
+    // Keep isAdding = true — navigation will unmount this component
   }, [selectedVariant, quantity, countryCode, router, product])
 
   // Prefetch checkout page on hover so navigation is instant
@@ -297,7 +297,7 @@ export default function ProductActions({
             !isValidVariant
           }
           variant="primary"
-          className="w-full h-14 text-base-regular font-semibold hidden small:flex"
+          className="w-full h-14 text-base-regular font-semibold hidden small:flex active:scale-[0.98] transition-transform duration-100"
           isLoading={isAdding}
           data-testid="add-product-button"
         >

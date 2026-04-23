@@ -13,6 +13,7 @@ type CheckoutContentProps = {
   customer?: HttpTypes.StoreCustomer | null
   availableShippingMethods?: HttpTypes.StoreCartShippingOption[] | null
   availablePaymentMethods?: any[] | null
+  pendingCartId?: string
 }
 
 export default function CheckoutContent({
@@ -22,27 +23,23 @@ export default function CheckoutContent({
   customer,
   availableShippingMethods,
   availablePaymentMethods,
+  pendingCartId,
 }: CheckoutContentProps) {
   const router = useRouter()
-  const [retrying, setRetrying] = useState(false)
-
-  // If no cart, check if it's still being created (fire-and-forget in progress)
-  // Poll for cart creation with a short timeout
   const [waiting, setWaiting] = useState(!hasCart)
 
+  // Poll for cart creation when quickOrder is in progress
   useEffect(() => {
     if (hasCart) return
 
-    // Check if there's an explicit error from quickOrder
     const storedError = sessionStorage.getItem("quickOrderError")
     if (storedError) {
       setWaiting(false)
       return
     }
 
-    // Poll for cart to be ready (quickOrder might still be running)
     let attempts = 0
-    const maxAttempts = 10
+    const maxAttempts = 15
     const interval = setInterval(async () => {
       attempts++
       if (attempts >= maxAttempts) {
@@ -52,6 +49,7 @@ export default function CheckoutContent({
       }
 
       try {
+        // Check if cart cookie is set (quickOrder completed)
         const res = await fetch("/api/check-cart", { method: "GET" })
         const data = await res.json()
         if (data.hasCart) {

@@ -57,7 +57,7 @@ const MobileCtaBar = ({
             onTouchStart={onPrefetchCheckout}
             disabled={!inStock || !variant || isAdding}
             variant="primary"
-            className="w-full h-12 font-semibold"
+            className="w-full h-12 font-semibold active:scale-[0.98] transition-transform duration-100"
             isLoading={isAdding}
             data-testid="mobile-cart-button"
           >

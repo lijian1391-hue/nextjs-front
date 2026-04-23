@@ -12,6 +12,8 @@ import {
   getCartId,
   removeCartId,
   setCartId,
+  setPendingCartId,
+  clearPendingCartId,
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "@lib/data/locale-actions"
@@ -282,7 +284,7 @@ export async function quickOrder({
     throw new Error(`Region not found for country code: ${countryCode}`)
   }
 
-  // 3. Create fresh cart — no need to retrieve first since we just cleared
+  // 3. Create fresh cart
   const headers = { ...(await getAuthHeaders()) }
   const locale = await getLocale()
   const { cart } = await sdk.store.cart.create(
@@ -291,24 +293,17 @@ export async function quickOrder({
     headers
   )
 
-  // 4. Persist cart ID
+  // 4. Persist cart ID + set pending flag for checkout page
   await setCartId(cart.id)
+  await setPendingCartId(cart.id)
 
   // 5. Add line item
   await sdk.store.cart
-    .createLineItem(
-      cart.id,
-      { variant_id: variantId, quantity },
-      {},
-      headers
-    )
+    .createLineItem(cart.id, { variant_id: variantId, quantity }, {}, headers)
     .catch(medusaError)
 
-  // 6. Batch revalidation (once at the end)
-  const cartCacheTag = await getCacheTag("carts")
-  if (cartCacheTag) revalidateTag(cartCacheTag)
-  const fulfillmentCacheTag = await getCacheTag("fulfillment")
-  if (fulfillmentCacheTag) revalidateTag(fulfillmentCacheTag)
+  // 6. Clear pending flag
+  await clearPendingCartId()
 }
 
 export async function applyPromotions(codes: string[]) {
