@@ -71,25 +71,3 @@ export const removeCartId = async () => {
     maxAge: -1,
   })
 }
-
-// Pending cart: set during quickOrder, cleared after cart is ready
-export const setPendingCartId = async (cartId: string) => {
-  const cookies = await nextCookies()
-  cookies.set("_medusa_pending_cart_id", cartId, {
-    maxAge: 60, // 60 seconds max
-    httpOnly: false, // needs to be readable on client
-    sameSite: "strict",
-  })
-}
-
-export const getPendingCartId = async () => {
-  const cookies = await nextCookies()
-  return cookies.get("_medusa_pending_cart_id")?.value
-}
-
-export const clearPendingCartId = async () => {
-  const cookies = await nextCookies()
-  cookies.set("_medusa_pending_cart_id", "", {
-    maxAge: -1,
-  })
-}

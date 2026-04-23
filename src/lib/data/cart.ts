@@ -12,8 +12,6 @@ import {
   getCartId,
   removeCartId,
   setCartId,
-  setPendingCartId,
-  clearPendingCartId,
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "@lib/data/locale-actions"
@@ -292,17 +290,13 @@ export async function quickOrder({
     headers
   )
 
-  // 4. Persist cart ID + set pending flag for checkout page
+  // 4. Persist cart ID
   await setCartId(cart.id)
-  await setPendingCartId(cart.id)
 
   // 5. Add line item
   await sdk.store.cart
     .createLineItem(cart.id, { variant_id: variantId, quantity }, {}, headers)
     .catch(medusaError)
-
-  // 6. Clear pending flag
-  await clearPendingCartId()
 }
 
 export async function applyPromotions(codes: string[]) {
