@@ -14,9 +14,11 @@ export async function POST(request: NextRequest) {
   // Tag-based revalidation (for product/category/collection listing caches)
   if (tags && Array.isArray(tags)) {
     for (const tag of tags) {
+      // Notify Next.js Data Cache (D1 tag cache)
       revalidateTag(tag as string) // backward compat for any old-format tags
       revalidateTag(`storefront-${tag}` as string) // new fixed-format tags
       results.push(`tag:${tag}`)
+      console.log(`[revalidate] revalidateTag called for: ${tag}, storefront-${tag}`)
     }
   }
 
@@ -25,6 +27,7 @@ export async function POST(request: NextRequest) {
     for (const path of paths) {
       revalidatePath(path as string)
       results.push(`path:${path}`)
+      console.log(`[revalidate] revalidatePath called for: ${path}`)
     }
     // Layout-level revalidation clears all listing pages in the group
     const layoutPaths = [
@@ -37,6 +40,7 @@ export async function POST(request: NextRequest) {
     for (const layoutPath of layoutPaths) {
       revalidatePath(layoutPath, "layout")
       results.push(`layout:${layoutPath}`)
+      console.log(`[revalidate] revalidatePath (layout) called for: ${layoutPath}`)
     }
   }
 
