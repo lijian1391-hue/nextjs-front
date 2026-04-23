@@ -1,31 +1,33 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sdk } from "@lib/config"
-import { getAuthHeaders } from "@lib/data/cookies"
+import { setShippingMethod, initiatePaymentSession, retrieveCart } from "@lib/data/cart"
+import { listCartPaymentMethods } from "@lib/data/payment"
 
 export async function POST(req: NextRequest) {
   try {
     const { cartId, shippingMethodId, paymentProviderId } = await req.json()
-    const headers = { ...(await getAuthHeaders()) }
 
     const tasks: Promise<any>[] = []
 
     if (shippingMethodId) {
       tasks.push(
-        sdk.client.fetch(`/store/carts/${cartId}/shipping-methods`, {
-          method: "POST",
-          body: { option_id: shippingMethodId },
-          headers,
-        })
+        setShippingMethod({ cartId, shippingMethodId }).catch((e: any) =>
+          console.error("[init-checkout] setShippingMethod:", e.message)
+        )
       )
     }
 
     if (paymentProviderId) {
       tasks.push(
-        sdk.client.fetch(`/store/payment/sessions`, {
-          method: "POST",
-          body: { provider_id: paymentProviderId, cart_id: cartId },
-          headers,
-        })
+        (async () => {
+          const cart = await retrieveCart(cartId)
+          if (cart) {
+            await initiatePaymentSession(cart, {
+              provider_id: paymentProviderId,
+            } as any)
+          }
+        })().catch((e: any) =>
+          console.error("[init-checkout] initiatePaymentSession:", e.message)
+        )
       )
     }
 
