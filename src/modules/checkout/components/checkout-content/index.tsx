@@ -24,34 +24,42 @@ export default function CheckoutContent({
   availablePaymentMethods,
 }: CheckoutContentProps) {
   const router = useRouter()
-  const [waiting, setWaiting] = useState(!hasCart)
 
-  // Poll for cart creation when quickOrder is in progress
+  // Check if quickOrder is in progress — ignore server cart data until new cart is ready
+  const [isPending, setIsPending] = useState(() => {
+    if (typeof window === "undefined") return false
+    return sessionStorage.getItem("_medusa_order_pending") === "true"
+  })
+
+  // Poll for cart when pending
   useEffect(() => {
-    if (hasCart) return
+    if (!isPending) return
 
     const storedError = sessionStorage.getItem("quickOrderError")
     if (storedError) {
-      setWaiting(false)
+      sessionStorage.removeItem("_medusa_order_pending")
+      setIsPending(false)
       return
     }
 
     let attempts = 0
-    const maxAttempts = 15
+    const maxAttempts = 20
     const interval = setInterval(async () => {
       attempts++
       if (attempts >= maxAttempts) {
         clearInterval(interval)
-        setWaiting(false)
+        sessionStorage.removeItem("_medusa_order_pending")
+        setIsPending(false)
         return
       }
 
       try {
-        // Check if cart cookie is set (quickOrder completed)
         const res = await fetch("/api/check-cart", { method: "GET" })
         const data = await res.json()
         if (data.hasCart) {
           clearInterval(interval)
+          sessionStorage.removeItem("_medusa_order_pending")
+          sessionStorage.removeItem("quickOrderError")
           router.refresh()
         }
       } catch {
@@ -60,7 +68,17 @@ export default function CheckoutContent({
     }, 300)
 
     return () => clearInterval(interval)
-  }, [hasCart, router])
+  }, [isPending, router])
+
+  // Pending state: always show "Preparing" regardless of server data
+  if (isPending) {
+    return (
+      <div className="w-full max-w-2xl mx-auto px-4 py-6 small:py-12 text-center">
+        <div className="animate-spin w-8 h-8 border-2 border-jumia-orange border-t-transparent rounded-full mx-auto mb-4" />
+        <p className="text-ui-fg-muted">Preparing your order...</p>
+      </div>
+    )
+  }
 
   if (hasCart && cart) {
     return (
@@ -70,15 +88,6 @@ export default function CheckoutContent({
         availableShippingMethods={availableShippingMethods ?? null}
         availablePaymentMethods={availablePaymentMethods ?? null}
       />
-    )
-  }
-
-  if (waiting) {
-    return (
-      <div className="w-full max-w-2xl mx-auto px-4 py-6 small:py-12 text-center">
-        <div className="animate-spin w-8 h-8 border-2 border-jumia-orange border-t-transparent rounded-full mx-auto mb-4" />
-        <p className="text-ui-fg-muted">Preparing your order...</p>
-      </div>
     )
   }
 

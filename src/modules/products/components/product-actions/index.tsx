@@ -159,6 +159,9 @@ export default function ProductActions({
     const currencyCode = (selectedVariant as any)?.calculated_price?.currency_code
     const variantId = selectedVariant.id
 
+    // Mark order as pending — checkout page will show "Preparing" until new cart is ready
+    sessionStorage.setItem("_medusa_order_pending", "true")
+
     // Fire and forget: redirect immediately, create cart in background
     quickOrder({
       variantId,
@@ -166,7 +169,6 @@ export default function ProductActions({
       countryCode,
     }).catch((error) => {
       console.error("[quickOrder] Error:", error)
-      // Store error for checkout page to display
       if (typeof window !== "undefined") {
         sessionStorage.setItem("quickOrderError", JSON.stringify({
           message: error instanceof Error ? error.message : "Failed to add item to cart",
