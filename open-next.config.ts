@@ -10,5 +10,5 @@ export default defineCloudflareConfig({
     defaultLongLivedTtlSec: 604800, // 7 days
   }),
   tagCache: d1NextTagCache,
-  cachePurge: purgeCache(),
+  cachePurge: purgeCache({}),
 })
