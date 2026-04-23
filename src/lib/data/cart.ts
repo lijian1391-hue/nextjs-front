@@ -10,6 +10,7 @@ import {
   getCacheOptions,
   getCacheTag,
   getCartId,
+  removeAuthToken,
   removeCartId,
   setCartId,
 } from "./cookies"

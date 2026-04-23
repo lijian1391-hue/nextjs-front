@@ -4,7 +4,7 @@ import { HttpTypes } from "@medusajs/types"
 import OnePageCheckout from "@modules/checkout/templates/one-page-checkout"
 import CartErrorHandler from "@modules/checkout/components/cart-error-handler"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 type CheckoutContentProps = {
   countryCode: string
@@ -25,13 +25,23 @@ export default function CheckoutContent({
 }: CheckoutContentProps) {
   const router = useRouter()
 
-  // Check if quickOrder is in progress — ignore server cart data until new cart is ready
+  // Check if quickOrder is in progress
   const [isPending, setIsPending] = useState(() => {
     if (typeof window === "undefined") return false
     return sessionStorage.getItem("_medusa_order_pending") === "true"
   })
 
-  // Poll for cart when pending
+  // Local cart state: used when polling supplies fresh data directly
+  const [localCart, setLocalCart] = useState<HttpTypes.StoreCart | undefined>(cart)
+
+  // Merge: server cart is initial state; localCart wins when polling provides fresh data
+  const displayCart = localCart ?? cart
+
+  // Poll init-checkout — stronger signal than check-cart because it waits for
+  // cart data to be fully ready (cart exists + shipping + payment initialized).
+  // Returns the actual cart so we set it directly, bypassing stale server-render data.
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   useEffect(() => {
     if (!isPending) return
 
@@ -42,35 +52,35 @@ export default function CheckoutContent({
       return
     }
 
-    let attempts = 0
-    const maxAttempts = 20
-    const interval = setInterval(async () => {
-      attempts++
-      if (attempts >= maxAttempts) {
-        clearInterval(interval)
-        sessionStorage.removeItem("_medusa_order_pending")
-        setIsPending(false)
-        return
-      }
-
+    pollingRef.current = setInterval(async () => {
       try {
-        const res = await fetch("/api/check-cart", { method: "GET" })
+        const res = await fetch("/api/init-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cartId: null }),
+          cache: "no-store",
+        })
         const data = await res.json()
-        if (data.hasCart) {
-          clearInterval(interval)
+
+        // init-checkout succeeds only when cart data is fully ready
+        if (data.ok && data.cart) {
+          if (pollingRef.current) clearInterval(pollingRef.current)
           sessionStorage.removeItem("_medusa_order_pending")
           sessionStorage.removeItem("quickOrderError")
-          router.refresh()
+          setLocalCart(data.cart)
+          setIsPending(false)
         }
       } catch {
-        // ignore
+        // keep polling
       }
     }, 300)
 
-    return () => clearInterval(interval)
-  }, [isPending, router])
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current)
+    }
+  }, [isPending])
 
-  // Pending state: always show "Preparing" regardless of server data
+  // Pending state: show spinner until polling resolves
   if (isPending) {
     return (
       <div className="w-full max-w-2xl mx-auto px-4 py-6 small:py-12 text-center">
@@ -80,10 +90,10 @@ export default function CheckoutContent({
     )
   }
 
-  if (hasCart && cart) {
+  if (hasCart && displayCart) {
     return (
       <OnePageCheckout
-        cart={cart}
+        cart={displayCart}
         customer={customer ?? null}
         availableShippingMethods={availableShippingMethods ?? null}
         availablePaymentMethods={availablePaymentMethods ?? null}
