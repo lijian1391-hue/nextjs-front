@@ -46,6 +46,9 @@ export async function POST(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
   if (cfZoneId && cfApiToken && baseUrl) {
+    console.log(
+      `[revalidate] Attempting CDN purge — zone: ${cfZoneId.slice(0, 8)}..., urls: ${paths?.length ?? 0} paths`
+    )
     const allUrls = new Set<string>()
     if (paths && Array.isArray(paths)) {
       paths.forEach((p: string) => allUrls.add(`${baseUrl}${p}`))
@@ -75,14 +78,28 @@ export async function POST(request: NextRequest) {
         if (purgeResponse.ok) {
           results.push(`cdn:purged ${allUrls.size} URLs`)
         } else {
+          const body = await purgeResponse.text().catch(() => "")
           results.push(`cdn:purge failed (${purgeResponse.status})`)
+          console.error(
+            `[revalidate] CDN purge failed — status: ${purgeResponse.status}, zone: ${cfZoneId.slice(0, 8)}..., response: ${body}`
+          )
         }
-      } catch {
+      } catch (err) {
         results.push("cdn:purge error")
+        console.error(
+          `[revalidate] CDN purge error — zone: ${cfZoneId.slice(0, 8)}..., error: ${err instanceof Error ? err.message : err}`
+        )
       }
     }
   } else {
-    results.push("cdn:skipped (env vars not configured)")
+    const missing = [
+      !cfZoneId ? "CACHE_PURGE_ZONE_ID" : "",
+      !cfApiToken ? "CACHE_PURGE_API_TOKEN" : "",
+      !baseUrl ? "NEXT_PUBLIC_BASE_URL" : "",
+    ]
+      .filter(Boolean)
+      .join(", ")
+    results.push(`cdn:skipped (missing: ${missing})`)
   }
 
   return NextResponse.json({ revalidated: true, items: results })
