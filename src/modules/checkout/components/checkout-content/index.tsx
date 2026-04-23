@@ -13,7 +13,6 @@ type CheckoutContentProps = {
   customer?: HttpTypes.StoreCustomer | null
   availableShippingMethods?: HttpTypes.StoreCartShippingOption[] | null
   availablePaymentMethods?: any[] | null
-  pendingCartId?: string
 }
 
 export default function CheckoutContent({
@@ -23,7 +22,6 @@ export default function CheckoutContent({
   customer,
   availableShippingMethods,
   availablePaymentMethods,
-  pendingCartId,
 }: CheckoutContentProps) {
   const router = useRouter()
   const [waiting, setWaiting] = useState(!hasCart)

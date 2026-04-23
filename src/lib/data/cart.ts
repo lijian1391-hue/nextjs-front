@@ -31,27 +31,39 @@ export async function clearCart() {
  */
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
-  fields ??=
-    "*items,+items.total,*items.variant,*items.variant.product,*items.variant.product.images,*items.variant.product.thumbnail,*items.thumbnail,*items.metadata,*promotions,*region,+shipping_methods.name"
 
   if (!id) {
     return null
   }
 
+  fields ??=
+    "*items,+items.total,*items.variant,*items.variant.product,*items.variant.product.images,*items.variant.product.thumbnail,*items.thumbnail,*items.metadata,*promotions,*region,+shipping_methods.name"
+
   const headers = {
     ...(await getAuthHeaders()),
   }
 
-  return await sdk.client
-    .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
+  // Bypass Next.js Data Cache by using native fetch with cache: "no-store"
+  // This ensures checkout page always gets fresh cart data
+  const baseUrl = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+  const response = await fetch(
+    `${baseUrl}/store/carts/${id}?fields=${encodeURIComponent(fields)}`,
+    {
       method: "GET",
-      query: {
-        fields,
+      headers: {
+        ...headers,
+        "x-medusa-locale": (await getLocale()) || "en",
       },
-      headers,
-    })
-    .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
-    .catch(() => null)
+      cache: "no-store",
+    }
+  )
+
+  if (!response.ok) {
+    return null
+  }
+
+  const data: HttpTypes.StoreCartResponse = await response.json()
+  return data.cart
 }
 
 export async function getOrSetCart(countryCode: string) {
