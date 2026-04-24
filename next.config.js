@@ -31,6 +31,50 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Prevent CDN and browser from caching dynamic HTML pages.
+  // The Worker handles caching internally via RegionalCache + D1 tag checks.
+  // Without this, the Cloudflare CDN edge caches ISR pages for up to 5 minutes
+  // (due to s-maxage=300) and serves stale HTML even after on-demand revalidation.
+  async headers() {
+    return [
+      {
+        source: "/:countryCode/products/:handle",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-cache, no-store, max-age=0, s-maxage=0",
+          },
+        ],
+      },
+      {
+        source: "/:countryCode/store",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-cache, no-store, max-age=0, s-maxage=0",
+          },
+        ],
+      },
+      {
+        source: "/:countryCode/categories",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-cache, no-store, max-age=0, s-maxage=0",
+          },
+        ],
+      },
+      {
+        source: "/:countryCode/collections",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-cache, no-store, max-age=0, s-maxage=0",
+          },
+        ],
+      },
+    ]
+  },
   images: {
     loader: "custom",
     loaderFile: "./src/lib/util/cf-image-loader.ts",

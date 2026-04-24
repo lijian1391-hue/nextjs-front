@@ -6,7 +6,6 @@ import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
 import { HttpTypes } from "@medusajs/types"
 
-// Safety net: revalidate every 5 minutes even if on-demand revalidation fails
 export const revalidate = 300
 
 type Props = {
