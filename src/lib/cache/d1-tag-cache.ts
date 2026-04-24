@@ -25,7 +25,7 @@ export default {
     const entries = tags.map((tag) => {
       const tagStr = typeof tag === "string" ? tag : tag.tag
       const stale = typeof tag === "string" ? nowMs : (tag.stale ?? nowMs)
-      const expire = typeof tag === "string" ? null : (tag.expire ?? null)
+      const expire = typeof tag === "string" ? nowMs : (tag.expire ?? nowMs)
       return { key: getKey(tagStr), stale, expire }
     })
 
