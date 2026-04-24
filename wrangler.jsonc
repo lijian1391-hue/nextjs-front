@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
-  "name": "nextjs-front",
+  "name": "nextjs-front-2",
   "compatibility_date": "2025-04-09",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
