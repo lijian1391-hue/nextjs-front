@@ -27,18 +27,20 @@ for (const key of REQUIRED) {
 
 const { CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token, D1_DATABASE_ID: dbId } = process.env
 
+// DROP table so OpenNext can recreate it with the correct schema.
+// This avoids "duplicate column name" errors during deployment migrations.
 const res = await fetch(
   `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`,
   {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ sql: "DELETE FROM revalidations" }),
+    body: JSON.stringify({ sql: "DROP TABLE IF EXISTS revalidations" }),
   }
 )
 
 const data = await res.json()
 if (data.success) {
-  console.log(`[D1] Cleared revalidations table`)
+  console.log(`[D1] Dropped revalidations table`)
 } else {
   console.error(`[D1] Failed:`, data.errors)
   process.exit(1)

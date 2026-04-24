@@ -13,9 +13,9 @@
     "start": "next start -p 8000",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "preview": "node scripts/purge-cache.js && opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "clear-cache": "node scripts/clear-cache.mjs",
-    "deploy": "node scripts/clear-cache.mjs && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "node scripts/purge-cache.js && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types cloudflare-env.d.ts"
   },
   "dependencies": {
