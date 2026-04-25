@@ -9,4 +9,5 @@ export default defineCloudflareConfig({
     defaultLongLivedTtlSec: 604800, // 7 days
   }),
   tagCache: fixedD1TagCache,
+  enableCacheInterception: true,
 })
