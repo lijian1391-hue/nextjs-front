@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   const countryCode = request.nextUrl.searchParams.get("country") || "ng"
 
   const results: Record<string, unknown> = { handle, countryCode }
+  results.codeVersion = "v2-no-store" // 确认部署是否包含最新代码
   results.currentTime = new Date().toISOString()
   results.currentTimeMs = Date.now()
 
