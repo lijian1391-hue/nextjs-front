@@ -107,6 +107,33 @@ export async function GET(request: NextRequest) {
     results.dataCacheError = err instanceof Error ? err.message : String(err)
   }
 
+  // === 4b. SDK with cache: "no-store" (test if SDK passes through no-store) ===
+  try {
+    const { sdk } = await import("@lib/config")
+    const sdkResult = await sdk.client.fetch<{ products: { title: string; updated_at: string }[] }>(
+      `/store/products`,
+      {
+        method: "GET",
+        query: { handle, country_code: countryCode },
+        cache: "no-store",
+      }
+    )
+    const sdkProduct = sdkResult.products?.[0]
+    results.sdkNoStoreTitle = sdkProduct?.title ?? "NOT FOUND"
+    results.sdkNoStoreUpdatedAt = sdkProduct?.updated_at ?? "N/A"
+  } catch (err) {
+    results.sdkNoStoreError = err instanceof Error ? err.message : String(err)
+  }
+
+  // === 4c. Check incrementalCache wrapper ===
+  try {
+    const incCache = globalThis.incrementalCache as Record<string, unknown> | undefined
+    results.incrementalCacheName = incCache?.name ?? "undefined"
+    results.incrementalCacheType = typeof incCache
+  } catch {
+    results.incrementalCacheError = "Failed to read"
+  }
+
   // === 5. Direct Medusa API call (bypass ALL Next.js caching) ===
   try {
     const backendUrl = process.env.MEDUSA_BACKEND_URL
