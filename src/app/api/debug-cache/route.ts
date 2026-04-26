@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const countryCode = request.nextUrl.searchParams.get("country") || "ng"
 
   const results: Record<string, unknown> = { handle, countryCode }
-  results.codeVersion = "v2-no-store" // 确认部署是否包含最新代码
+  results.codeVersion = "v4-full-audit" // 确认部署是否包含最新代码
   results.currentTime = new Date().toISOString()
   results.currentTimeMs = Date.now()
 
@@ -53,13 +53,18 @@ export async function GET(request: NextRequest) {
   try {
     const incrementalCache = globalThis.incrementalCache as {
       get: (key: string, type?: string) => Promise<Record<string, unknown> | null>
+      delete: (key: string) => Promise<void>
+      name?: string
     } | null
 
     if (!incrementalCache?.get) {
       results.cacheError = "incrementalCache not available"
     } else {
-      const path = `/${countryCode}/products/${handle}`
-      const cached = await incrementalCache.get(path, "cache") as Record<string, unknown> | null
+      results.incrementalCacheDeleteAvailable = !!incrementalCache.delete
+
+      // Check product detail page Route Cache
+      const productPath = `/${countryCode}/products/${handle}`
+      const cached = await incrementalCache.get(productPath, "cache") as Record<string, unknown> | null
 
       if (!cached) {
         results.routeCacheStatus = "MISS"
@@ -75,8 +80,38 @@ export async function GET(request: NextRequest) {
           const headers = meta?.headers as Record<string, string> | undefined
           results.routeCacheTags = headers?.["x-next-cache-tags"] || "(MISSING)"
         }
+      }
 
-        // hasBeenRevalidated test
+      // Check store listing page Route Cache
+      const storePath = `/${countryCode}/store`
+      const storeCached = await incrementalCache.get(storePath, "cache") as Record<string, unknown> | null
+      if (!storeCached) {
+        results.storeRouteCacheStatus = "MISS"
+      } else {
+        results.storeRouteCacheStatus = "HIT"
+        results.storeRouteCacheLastModified = storeCached.lastModified
+        results.storeRouteCacheLastModifiedDate = new Date((storeCached.lastModified as number) ?? Date.now()).toISOString()
+        const storeValue = storeCached.value as Record<string, unknown> | undefined
+        if (storeValue) {
+          const storeMeta = storeValue.meta as Record<string, unknown> | undefined
+          const storeHeaders = storeMeta?.headers as Record<string, string> | undefined
+          results.storeRouteCacheTags = storeHeaders?.["x-next-cache-tags"] || "(MISSING)"
+        }
+      }
+
+      // Check home page Route Cache
+      const homePath = `/${countryCode}`
+      const homeCached = await incrementalCache.get(homePath, "cache") as Record<string, unknown> | null
+      if (!homeCached) {
+        results.homeRouteCacheStatus = "MISS"
+      } else {
+        results.homeRouteCacheStatus = "HIT"
+        results.homeRouteCacheLastModified = homeCached.lastModified
+        results.homeRouteCacheLastModifiedDate = new Date((homeCached.lastModified as number) ?? Date.now()).toISOString()
+      }
+
+      // hasBeenRevalidated test (product page only)
+      if (cached) {
         const tagCache = globalThis.tagCache as {
           hasBeenRevalidated: (tags: string[], lastModified: number) => Promise<boolean>
         } | null
@@ -85,6 +120,8 @@ export async function GET(request: NextRequest) {
           const tags = (results.routeCacheTags as string)?.split?.(",") ?? []
           const lastMod = (cached.lastModified as number) ?? Date.now()
           results.tagCheckResult = await tagCache.hasBeenRevalidated(tags, lastMod)
+          results.tagCheckTags = tags
+          results.tagCheckLastModified = lastMod
         }
       }
     }
@@ -92,7 +129,7 @@ export async function GET(request: NextRequest) {
     results.cacheError = err instanceof Error ? err.message : String(err)
   }
 
-  // === 4. Data Cache (via listProducts, uses next: { tags, revalidate }) ===
+  // === 4. Data Cache (via listProducts, uses cache: "no-store") ===
   try {
     const { listProducts } = await import("@lib/data/products")
     const { response } = await listProducts({ countryCode, queryParams: { handle } })
@@ -165,13 +202,20 @@ export async function GET(request: NextRequest) {
   // === Summary ===
   const dataMatches = results.directApiTitle === results.dataCacheTitle
   results.summary_dataCacheMatchesApi = dataMatches
+  const issues: string[] = []
   if (!dataMatches) {
-    results.summary_issue = "DATA CACHE STALE - direct API has different data than cached fetch"
-  } else if (results.routeCacheStatus === "HIT") {
-    results.summary_issue = "Route Cache HIT, check tagCheckResult"
-  } else {
-    results.summary_issue = "Route Cache MISS, page should render fresh"
+    issues.push("DATA CACHE STALE")
   }
+  if (results.routeCacheStatus === "HIT") {
+    issues.push(`Product Route Cache HIT (tags: ${results.routeCacheTags}, tagCheck: ${results.tagCheckResult})`)
+  }
+  if (results.storeRouteCacheStatus === "HIT") {
+    issues.push(`Store Route Cache HIT (tags: ${results.storeRouteCacheTags})`)
+  }
+  if (results.homeRouteCacheStatus === "HIT") {
+    issues.push("Home Route Cache HIT")
+  }
+  results.summary_issues = issues.length > 0 ? issues : ["All fresh — no stale cache"]
 
   return NextResponse.json(results, { headers: { "Cache-Control": "no-store" } })
 }

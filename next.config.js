@@ -65,7 +65,25 @@ const nextConfig = {
         ],
       },
       {
+        source: "/:countryCode/categories/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-cache, no-store, max-age=0, s-maxage=0",
+          },
+        ],
+      },
+      {
         source: "/:countryCode/collections",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-cache, no-store, max-age=0, s-maxage=0",
+          },
+        ],
+      },
+      {
+        source: "/:countryCode/collections/:handle",
         headers: [
           {
             key: "Cache-Control",
