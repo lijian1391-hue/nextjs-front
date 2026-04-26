@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const countryCode = request.nextUrl.searchParams.get("country") || "ng"
 
   const results: Record<string, unknown> = { handle, countryCode }
-  results.codeVersion = "v4-full-audit" // 确认部署是否包含最新代码
+  results.codeVersion = "v5-diag-backend" // 确认部署是否包含最新代码
   results.currentTime = new Date().toISOString()
   results.currentTimeMs = Date.now()
 
@@ -162,7 +162,36 @@ export async function GET(request: NextRequest) {
     results.sdkNoStoreError = err instanceof Error ? err.message : String(err)
   }
 
-  // === 4c. Check incrementalCache wrapper ===
+  // === 4c. SDK with listProducts-equivalent params (region_id + fields) ===
+  // Tests if Medusa backend returns stale data for specific query params
+  try {
+    const { sdk } = await import("@lib/config")
+    const { getRegion } = await import("@lib/data/regions")
+    const region = await getRegion(countryCode)
+    if (region) {
+      const sdkMatchResult = await sdk.client.fetch<{ products: { title: string; updated_at: string }[] }>(
+        `/store/products`,
+        {
+          method: "GET",
+          query: {
+            handle,
+            region_id: region.id,
+            fields: "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,",
+          },
+          cache: "no-store",
+        }
+      )
+      const matchProduct = sdkMatchResult.products?.[0]
+      results.sdkWithFieldsTitle = matchProduct?.title ?? "NOT FOUND"
+      results.sdkWithFieldsUpdatedAt = matchProduct?.updated_at ?? "N/A"
+    } else {
+      results.sdkWithFieldsError = "Region not found"
+    }
+  } catch (err) {
+    results.sdkWithFieldsError = err instanceof Error ? err.message : String(err)
+  }
+
+  // === 4d. Check incrementalCache wrapper ===
   try {
     const incCache = globalThis.incrementalCache as Record<string, unknown> | undefined
     results.incrementalCacheName = incCache?.name ?? "undefined"
@@ -203,8 +232,17 @@ export async function GET(request: NextRequest) {
   const dataMatches = results.directApiTitle === results.dataCacheTitle
   results.summary_dataCacheMatchesApi = dataMatches
   const issues: string[] = []
+
+  // If sdkWithFields matches directApi but dataCache doesn't → Next.js Data Cache issue
+  // If sdkWithFields also stale → Medusa backend cache issue (specific to region_id/fields params)
   if (!dataMatches) {
-    issues.push("DATA CACHE STALE")
+    if (results.sdkWithFieldsTitle === results.directApiTitle) {
+      issues.push("DATA CACHE STALE — listProducts returns stale, but SDK with same params returns fresh → Next.js Data Cache issue")
+    } else if (results.sdkWithFieldsTitle === results.dataCacheTitle) {
+      issues.push("MEDUSA BACKEND STALE — SDK with region_id+fields also returns stale → backend caches response for specific query params")
+    } else {
+      issues.push("DATA CACHE STALE — unclear source, investigate further")
+    }
   }
   if (results.routeCacheStatus === "HIT") {
     issues.push(`Product Route Cache HIT (tags: ${results.routeCacheTags}, tagCheck: ${results.tagCheckResult})`)
