@@ -26,7 +26,9 @@ sdk.client.fetch = async <T>(
     localeValue = localeHeader?.["x-medusa-locale"] ?? null
   } catch {}
 
-  const newHeaders: Record<string, string> = {}
+  const newHeaders: Record<string, string> = {
+    "Cache-Control": "no-cache",
+  }
   if (localeValue) {
     newHeaders["x-medusa-locale"] = localeValue
   }

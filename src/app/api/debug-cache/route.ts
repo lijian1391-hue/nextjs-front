@@ -218,6 +218,8 @@ export async function GET(request: NextRequest) {
       if (apiProduct) {
         results.directApiTitle = apiProduct.title
         results.directApiUpdatedAt = apiProduct.updated_at ?? "N/A"
+        results.directApiCacheControl = apiResponse.headers.get("cache-control") ?? "(none)"
+        results.directApiCfCacheStatus = apiResponse.headers.get("cf-cache-status") ?? "(none)"
       } else {
         results.directApiStatus = "NOT FOUND"
       }
@@ -226,6 +228,36 @@ export async function GET(request: NextRequest) {
     }
   } catch (err) {
     results.directApiError = err instanceof Error ? err.message : String(err)
+  }
+
+  // === 5b. Same API call WITH cache-busting timestamp ===
+  try {
+    const backendUrl = process.env.MEDUSA_BACKEND_URL
+    const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+    if (backendUrl) {
+      const bustUrl = `${backendUrl}/store/products?handle=${encodeURIComponent(handle)}&country_code=${countryCode}&_=${Date.now()}`
+      const bustResponse = await fetch(bustUrl, {
+        cache: "no-store",
+        headers: {
+          "x-publishable-api-key": publishableKey || "",
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache",
+        },
+      })
+      const bustData = await bustResponse.json() as { products: Record<string, unknown>[] }
+      const bustProduct = bustData.products?.[0]
+      if (bustProduct) {
+        results.bustApiTitle = bustProduct.title
+        results.bustApiUpdatedAt = bustProduct.updated_at ?? "N/A"
+        results.bustApiCacheControl = bustResponse.headers.get("cache-control") ?? "(none)"
+        results.bustApiCfCacheStatus = bustResponse.headers.get("cf-cache-status") ?? "(none)"
+      } else {
+        results.bustApiStatus = "NOT FOUND"
+      }
+    }
+  } catch (err) {
+    results.bustApiError = err instanceof Error ? err.message : String(err)
   }
 
   // === Summary ===
@@ -254,6 +286,13 @@ export async function GET(request: NextRequest) {
     issues.push("Home Route Cache HIT")
   }
   results.summary_issues = issues.length > 0 ? issues : ["All fresh — no stale cache"]
+
+  // Add cache-bust comparison to summary
+  if (results.bustApiTitle && results.bustApiTitle !== results.directApiTitle) {
+    results.summary_cacheBustFix = "YES — cache-bust param returns fresh data → intermediate HTTP cache is the problem"
+  } else if (results.bustApiTitle && results.bustApiTitle === results.directApiTitle) {
+    results.summary_cacheBustFix = "NO — cache-bust param returns same stale data → Medusa backend itself is stale"
+  }
 
   return NextResponse.json(results, { headers: { "Cache-Control": "no-store" } })
 }
