@@ -15,6 +15,15 @@ type CheckoutContentProps = {
   availablePaymentMethods?: any[] | null
 }
 
+function LoadingSpinner() {
+  return (
+    <div className="w-full max-w-2xl mx-auto px-4 py-6 small:py-12 text-center">
+      <div className="animate-spin w-8 h-8 border-2 border-jumia-orange border-t-transparent rounded-full mx-auto mb-4" />
+      <p className="text-ui-fg-muted">Preparing your order...</p>
+    </div>
+  )
+}
+
 export default function CheckoutContent({
   countryCode,
   hasCart,
@@ -31,6 +40,9 @@ export default function CheckoutContent({
     return sessionStorage.getItem("_medusa_order_pending") === "true"
   })
 
+  // Track whether client has hydrated
+  const [hydrated, setHydrated] = useState(false)
+
   // Local cart state: used when polling supplies fresh data directly
   const [localCart, setLocalCart] = useState<HttpTypes.StoreCart | undefined>(cart)
 
@@ -41,6 +53,10 @@ export default function CheckoutContent({
   // cart data to be fully ready (cart exists + shipping + payment initialized).
   // Returns the actual cart so we set it directly, bypassing stale server-render data.
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
   useEffect(() => {
     if (!isPending) return
@@ -80,16 +96,6 @@ export default function CheckoutContent({
     }
   }, [isPending])
 
-  // Pending state: show spinner until polling resolves
-  if (isPending) {
-    return (
-      <div className="w-full max-w-2xl mx-auto px-4 py-6 small:py-12 text-center">
-        <div className="animate-spin w-8 h-8 border-2 border-jumia-orange border-t-transparent rounded-full mx-auto mb-4" />
-        <p className="text-ui-fg-muted">Preparing your order...</p>
-      </div>
-    )
-  }
-
   if (hasCart && displayCart) {
     return (
       <OnePageCheckout
@@ -101,6 +107,17 @@ export default function CheckoutContent({
     )
   }
 
+  // Pending state: show spinner until polling resolves
+  if (isPending) {
+    return <LoadingSpinner />
+  }
+
+  // Not yet hydrated on client — show spinner to avoid SSR blank flash
+  if (!hydrated) {
+    return <LoadingSpinner />
+  }
+
+  // Client-side, no cart, no pending — redirect via CartErrorHandler
   return (
     <CartErrorHandler
       countryCode={countryCode}

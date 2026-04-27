@@ -30,8 +30,10 @@ export default function CartErrorHandler({
       } catch {
         sessionStorage.removeItem("quickOrderError")
       }
+    } else {
+      router.replace(`/${countryCode}`)
     }
-  }, [])
+  }, [countryCode, router])
 
   const handleRetry = async () => {
     if (!error) return
