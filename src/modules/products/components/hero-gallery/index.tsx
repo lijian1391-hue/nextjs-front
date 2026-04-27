@@ -55,7 +55,7 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
               src={images[selectedIndex].url}
               alt={`Product image ${selectedIndex + 1}`}
               fill
-              priority
+              priority={selectedIndex === 0}
               sizes="(max-width: 1280px) 50vw, 1000px"
               className="object-contain"
             />
