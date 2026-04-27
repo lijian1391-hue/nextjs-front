@@ -43,3 +43,17 @@ export function getOriginalUrl(src: string): string {
   if (slashIdx === -1) return src
   return afterPrefix.substring(slashIdx + 1)
 }
+
+// Rewrite image URLs in HTML to CF-optimized URLs
+export function rewriteImageUrls(html: string): string {
+  if (!html || !ENABLED) return html
+
+  return html.replace(
+    /(<img\s[^>]*src=["'])(https:\/\/images\.afrylo\.com\/[^"']*)(["'][^>]*>)/gi,
+    (_, prefix, url, suffix) => {
+      const normalizedSrc = url.replace(/^https?:\/\//, "")
+      const params = "width=800,quality=80,format=auto,fit=cover"
+      return `${prefix}${SITE_ORIGIN}/cdn-cgi/image/${params}/https://${normalizedSrc}${suffix}`
+    }
+  )
+}

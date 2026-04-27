@@ -3,6 +3,7 @@
 import { HttpTypes } from "@medusajs/types"
 import { useEffect, useMemo, useState } from "react"
 import DOMPurify from "dompurify"
+import { rewriteImageUrls } from "@lib/util/cf-image-loader"
 
 type ProductDescriptionProps = {
   product: HttpTypes.StoreProduct
@@ -22,33 +23,33 @@ const ProductDescription = ({ product }: ProductDescriptionProps) => {
 
   const sanitizedHtml = useMemo(() => {
     if (!product.description || !isHtml(product.description)) return ""
-    // On server / before hydration: trust admin-generated HTML from TipTap
-    // On client: sanitize as defense-in-depth
-    if (!mounted) return product.description
-    return DOMPurify.sanitize(product.description, {
-      ALLOWED_TAGS: [
-        "h1", "h2", "h3", "h4", "h5", "h6",
-        "p", "br", "hr",
-        "strong", "b", "em", "i", "u", "s", "strike",
-        "ul", "ol", "li",
-        "blockquote",
-        "a",
-        "img",
-        "iframe",
-        "div",
-        "span",
-        "figure", "figcaption",
-        "table", "thead", "tbody", "tr", "th", "td",
-      ],
-      ALLOWED_ATTR: [
-        "href", "target", "rel",
-        "src", "alt", "title", "width", "height",
-        "class", "style",
-        "allow", "allowfullscreen", "frameborder",
-        "data-youtube-video",
-      ],
-      ADD_ATTR: ["allow", "allowfullscreen", "frameborder"],
-    })
+    const html = !mounted
+      ? product.description
+      : DOMPurify.sanitize(product.description, {
+          ALLOWED_TAGS: [
+            "h1", "h2", "h3", "h4", "h5", "h6",
+            "p", "br", "hr",
+            "strong", "b", "em", "i", "u", "s", "strike",
+            "ul", "ol", "li",
+            "blockquote",
+            "a",
+            "img",
+            "iframe",
+            "div",
+            "span",
+            "figure", "figcaption",
+            "table", "thead", "tbody", "tr", "th", "td",
+          ],
+          ALLOWED_ATTR: [
+            "href", "target", "rel",
+            "src", "alt", "title", "width", "height",
+            "class", "style",
+            "allow", "allowfullscreen", "frameborder",
+            "data-youtube-video",
+          ],
+          ADD_ATTR: ["allow", "allowfullscreen", "frameborder"],
+        })
+    return rewriteImageUrls(html)
   }, [product.description, mounted])
 
   if (!product.description) return null
