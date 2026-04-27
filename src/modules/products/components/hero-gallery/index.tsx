@@ -50,16 +50,15 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
       {/* Desktop: Main image 1:1 + thumbnail strip */}
       <div className="hidden small:block">
         <div className="relative w-full overflow-hidden rounded-rounded bg-ui-bg-subtle aspect-square">
-          {images[selectedIndex]?.url && (
-            <ResponsiveImage
-              src={images[selectedIndex].url}
-              alt={`Product image ${selectedIndex + 1}`}
-              fill
-              priority={selectedIndex === 0}
-              sizes="(max-width: 1280px) 50vw, 1000px"
-              className="object-contain"
-            />
-          )}
+          <ResponsiveImage
+            key={selectedIndex}
+            src={images[selectedIndex].url}
+            alt={`Product image ${selectedIndex + 1}`}
+            fill
+            priority={selectedIndex === 0}
+            sizes="(max-width: 1280px) 50vw, 1000px"
+            className="object-contain"
+          />
         </div>
         {images.length > 1 && (
           <div className="flex gap-2 mt-3">

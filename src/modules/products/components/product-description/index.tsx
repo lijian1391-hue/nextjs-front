@@ -1,8 +1,7 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import { useEffect, useMemo, useState } from "react"
-import DOMPurify from "dompurify"
+import { useMemo, useState } from "react"
 import { rewriteImageUrls } from "@lib/util/cf-image-loader"
 
 type ProductDescriptionProps = {
@@ -15,42 +14,11 @@ const isHtml = (text: string): boolean => {
 
 const ProductDescription = ({ product }: ProductDescriptionProps) => {
   const [expanded, setExpanded] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const sanitizedHtml = useMemo(() => {
+  const html = useMemo(() => {
     if (!product.description || !isHtml(product.description)) return ""
-    const html = !mounted
-      ? product.description
-      : DOMPurify.sanitize(product.description, {
-          ALLOWED_TAGS: [
-            "h1", "h2", "h3", "h4", "h5", "h6",
-            "p", "br", "hr",
-            "strong", "b", "em", "i", "u", "s", "strike",
-            "ul", "ol", "li",
-            "blockquote",
-            "a",
-            "img",
-            "iframe",
-            "div",
-            "span",
-            "figure", "figcaption",
-            "table", "thead", "tbody", "tr", "th", "td",
-          ],
-          ALLOWED_ATTR: [
-            "href", "target", "rel",
-            "src", "alt", "title", "width", "height",
-            "class", "style",
-            "allow", "allowfullscreen", "frameborder",
-            "data-youtube-video",
-          ],
-          ADD_ATTR: ["allow", "allowfullscreen", "frameborder"],
-        })
-    return rewriteImageUrls(html)
-  }, [product.description, mounted])
+    return rewriteImageUrls(product.description)
+  }, [product.description])
 
   if (!product.description) return null
 
@@ -64,7 +32,7 @@ const ProductDescription = ({ product }: ProductDescriptionProps) => {
           className={`rich-description text-sm-regular text-ui-fg-subtle leading-relaxed ${
             !expanded ? "line-clamp-4 small:line-clamp-none" : ""
           }`}
-          dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+          dangerouslySetInnerHTML={{ __html: html }}
         />
         <button
           onClick={() => setExpanded(!expanded)}
