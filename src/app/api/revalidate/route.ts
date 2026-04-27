@@ -87,9 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: Direct Route Cache deletion from R2 + L1
-    // With cache: "no-store", Route Cache entries have no tags,
-    // so D1-based revalidation cannot detect staleness.
-    // Direct deletion is the ONLY reliable invalidation mechanism.
+    // Safety net — ensures immediate freshness alongside tag-based revalidation.
     const cacheablePaths = (paths as string[]).filter((p) => {
       // Home page "/" has no revalidate and no generateStaticParams — never cached
       // Only delete paths for pages that have Route Cache entries

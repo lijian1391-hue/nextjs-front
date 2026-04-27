@@ -3,7 +3,7 @@
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 
-import { getAuthHeaders } from "./cookies"
+import { getAuthHeaders, getCacheOptions } from "./cookies"
 
 export const retrieveVariant = async (
   variant_id: string
@@ -16,6 +16,10 @@ export const retrieveVariant = async (
     ...authHeaders,
   }
 
+  const next = {
+    ...(await getCacheOptions("products")),
+  }
+
   return await sdk.client
     .fetch<{ variant: HttpTypes.StoreProductVariant }>(
       `/store/product-variants/${variant_id}`,
@@ -25,7 +29,8 @@ export const retrieveVariant = async (
           fields: "*images",
         },
         headers,
-        cache: "no-store",
+        next,
+        cache: "force-cache",
       }
     )
     .then(({ variant }) => variant)
