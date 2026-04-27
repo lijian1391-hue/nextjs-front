@@ -25,15 +25,6 @@ type HeroGalleryProps = {
 
 const HeroGallery = ({ images }: HeroGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 640px)")
-    setIsMobile(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-    mq.addEventListener("change", handler)
-    return () => mq.removeEventListener("change", handler)
-  }, [])
 
   useEffect(() => {
     setSelectedIndex(0)
@@ -47,46 +38,48 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
     )
   }
 
-  // After hydration: render only the matching viewport's component
-  if (isMobile) {
-    return <MobileCarousel images={images} />
-  }
-
-  // Desktop (also used for SSR/SSG — isMobile is false on server)
   return (
     <div>
-      <div className="relative w-full overflow-hidden rounded-rounded bg-ui-bg-subtle aspect-square">
-        <ResponsiveImage
-          key={selectedIndex}
-          src={images[selectedIndex].url}
-          alt={`Product image ${selectedIndex + 1}`}
-          fill
-          sizes="(max-width: 1280px) 50vw, 1000px"
-          className="object-contain"
-        />
+      {/* Mobile: Swiper carousel — display:none on desktop, images won't load */}
+      <div className="block small:hidden">
+        <MobileCarousel images={images} />
       </div>
-      {images.length > 1 && (
-        <div className="flex gap-2 mt-3">
-          {images.map((image, index) => (
-            <button
-              key={image.id}
-              onClick={() => setSelectedIndex(index)}
-              className={`relative w-16 h-16 rounded-rounded overflow-hidden border-2 transition-colors ${
-                index === selectedIndex
-                  ? "border-ui-border-interactive"
-                  : "border-transparent"
-              }`}
-            >
-              <img
-                src={getCfUrl(image.url!, 128)}
-                alt={`Thumbnail ${index + 1}`}
-                className="absolute inset-0 w-full h-full object-cover"
-                loading="lazy"
-              />
-            </button>
-          ))}
+
+      {/* Desktop: Main image + thumbnails — display:none on mobile, images won't load */}
+      <div className="hidden small:block">
+        <div className="relative w-full overflow-hidden rounded-rounded bg-ui-bg-subtle aspect-square">
+          <ResponsiveImage
+            key={selectedIndex}
+            src={images[selectedIndex].url}
+            alt={`Product image ${selectedIndex + 1}`}
+            fill
+            sizes="(max-width: 1280px) 50vw, 1000px"
+            className="object-contain"
+          />
         </div>
-      )}
+        {images.length > 1 && (
+          <div className="flex gap-2 mt-3">
+            {images.map((image, index) => (
+              <button
+                key={image.id}
+                onClick={() => setSelectedIndex(index)}
+                className={`relative w-16 h-16 rounded-rounded overflow-hidden border-2 transition-colors ${
+                  index === selectedIndex
+                    ? "border-ui-border-interactive"
+                    : "border-transparent"
+                }`}
+              >
+                <img
+                  src={getCfUrl(image.url!, 128)}
+                  alt={`Thumbnail ${index + 1}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
