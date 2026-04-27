@@ -44,16 +44,22 @@ export function getOriginalUrl(src: string): string {
   return afterPrefix.substring(slashIdx + 1)
 }
 
+// Build a CF-optimized URL for a given original URL and width
+export function getCfUrl(src: string, width: number): string {
+  if (!src.includes(CF_IMAGES_ORIGIN)) return src
+  const normalizedSrc = src.replace(/^https?:\/\//, "")
+  const params = `width=${width},quality=80,format=auto,fit=cover`
+  return `${SITE_ORIGIN}/cdn-cgi/image/${params}/https://${normalizedSrc}`
+}
+
 // Rewrite image URLs in HTML to CF-optimized URLs
 export function rewriteImageUrls(html: string): string {
-  if (!html || !ENABLED) return html
+  if (!html) return html
 
   return html.replace(
     /(<img\s[^>]*src=["'])(https:\/\/images\.afrylo\.com\/[^"']*)(["'][^>]*>)/gi,
     (_, prefix, url, suffix) => {
-      const normalizedSrc = url.replace(/^https?:\/\//, "")
-      const params = "width=800,quality=80,format=auto,fit=cover"
-      return `${prefix}${SITE_ORIGIN}/cdn-cgi/image/${params}/https://${normalizedSrc}${suffix}`
+      return `${prefix}${getCfUrl(url, 800)}${suffix}`
     }
   )
 }

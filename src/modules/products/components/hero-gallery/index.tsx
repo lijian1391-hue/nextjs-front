@@ -2,6 +2,7 @@
 
 import { HttpTypes } from "@medusajs/types"
 import ResponsiveImage from "@modules/common/components/responsive-image"
+import { getCfUrl } from "@lib/util/cf-image-loader"
 import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
 
@@ -72,12 +73,11 @@ const HeroGallery = ({ images }: HeroGalleryProps) => {
                     : "border-transparent"
                 }`}
               >
-                <ResponsiveImage
-                  src={image.url!}
+                <img
+                  src={getCfUrl(image.url!, 128)}
                   alt={`Thumbnail ${index + 1}`}
-                  fill
-                  sizes="64px"
-                  className="object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="lazy"
                 />
               </button>
             ))}
