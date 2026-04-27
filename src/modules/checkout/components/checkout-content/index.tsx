@@ -96,7 +96,7 @@ export default function CheckoutContent({
     }
   }, [isPending])
 
-  if (hasCart && displayCart) {
+  if (displayCart) {
     return (
       <OnePageCheckout
         cart={displayCart}
