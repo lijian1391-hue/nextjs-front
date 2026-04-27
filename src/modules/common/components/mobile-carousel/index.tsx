@@ -27,7 +27,6 @@ export default function MobileCarousel({ images }: MobileCarouselProps) {
               src={image.url!}
               alt={`Product image ${index + 1}`}
               fill
-              priority={index === 0}
               sizes="100vw"
               className="object-cover"
             />
