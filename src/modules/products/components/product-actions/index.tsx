@@ -11,8 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileCtaBar from "../mobile-cta-bar"
 import { useRouter } from "next/navigation"
-import { rudderAnalytics } from "@lib/util/rudderstack"
-import { trackPixel } from "@lib/util/pixel"
+import { trackPixel, loadPlatforms, parsePlatforms, fetchPixelConfig, type PixelPlatform } from "@lib/util/pixel"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -42,6 +41,11 @@ export default function ProductActions({
   const countryCode = useParams().countryCode as string
   const viewedRef = useRef(false)
   const isAddingRef = useRef(false)
+
+  // Fetch pixel config on mount (sales channel resolved server-side)
+  useEffect(() => {
+    fetchPixelConfig()
+  }, [])
 
   // Initialize options from initialVariantId; fall back to first variant if no v_id in URL
   const getInitialOptions = (): Record<string, string | undefined> => {
@@ -86,28 +90,21 @@ export default function ProductActions({
     if (viewedRef.current || !selectedVariant) return
     viewedRef.current = true
 
+    const platforms = parsePlatforms(product.metadata)
+    if (platforms.length) loadPlatforms(platforms)
+
     const price = (selectedVariant as any)?.calculated_price?.calculated_amount
     const currencyCode = (selectedVariant as any)?.calculated_price?.currency_code
 
     const eventId = `${selectedVariant.id}_ViewContent_${Date.now()}`
 
-    rudderAnalytics.track("Product Viewed", {
-      product_id: product.id,
-      sku: selectedVariant.sku,
-      name: product.title,
-      price: price ? price / 100 : undefined,
-      currency: currencyCode,
-      url: typeof window !== "undefined" ? window.location.href : undefined,
-      image_url: product.thumbnail,
-    })
-
-    trackPixel("ViewContent", {
+    trackPixel(platforms, "ViewContent", {
       content_ids: [product.id],
       content_type: "product",
       value: price ? price / 100 : undefined,
       currency: currencyCode,
     }, eventId)
-  }, [selectedVariant, product.id, product.title, product.thumbnail])
+  }, [selectedVariant, product.id, product.title, product.thumbnail, product.metadata])
 
   const isValidVariant = useMemo(() => {
     return product.variants?.some((v) => {
@@ -180,17 +177,10 @@ export default function ProductActions({
     })
 
     // Track events immediately
+    const platforms = parsePlatforms(product.metadata)
     const addEventId = `${variantId}_AddToCart_${Date.now()}`
-    rudderAnalytics.track("Product Added", {
-      product_id: product.id,
-      sku: selectedVariant?.sku,
-      name: product.title,
-      price: price ? price / 100 : undefined,
-      currency: currencyCode,
-      quantity,
-    })
 
-    trackPixel("AddToCart", {
+    trackPixel(platforms, "AddToCart", {
       content_ids: [product.id],
       content_type: "product",
       value: price ? (price / 100) * quantity : undefined,
@@ -199,19 +189,8 @@ export default function ProductActions({
     }, addEventId)
 
     const checkoutEventId = `${variantId}_InitiateCheckout_${Date.now()}`
-    rudderAnalytics.track("Checkout Started", {
-      revenue: price ? (price / 100) * quantity : undefined,
-      currency: currencyCode,
-      products: [
-        {
-          product_id: product.id,
-          quantity,
-          price: price ? price / 100 : undefined,
-        },
-      ],
-    })
 
-    trackPixel("InitiateCheckout", {
+    trackPixel(platforms, "InitiateCheckout", {
       value: price ? (price / 100) * quantity : undefined,
       currency: currencyCode,
       content_ids: [product.id],

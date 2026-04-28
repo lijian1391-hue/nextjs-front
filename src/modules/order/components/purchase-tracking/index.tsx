@@ -1,7 +1,6 @@
 "use client"
 
-import { rudderAnalytics } from "@lib/util/rudderstack"
-import { trackPixel } from "@lib/util/pixel"
+import { trackPixel, loadPlatforms, type PixelPlatform } from "@lib/util/pixel"
 import { HttpTypes } from "@medusajs/types"
 import { useEffect, useRef } from "react"
 
@@ -16,6 +15,11 @@ export default function PurchaseTracking({ order }: PurchaseTrackingProps) {
     if (trackedRef.current) return
     trackedRef.current = true
 
+    // Purchase is a critical conversion event — fire to all loaded platforms
+    // regardless of per-product pixel_platforms (which only controls page-level SDK loading)
+    const platforms: PixelPlatform[] = ["meta", "ga4", "tiktok"]
+    loadPlatforms(platforms)
+
     const eventId = `${order.id}_Purchase`
     const revenue = order.total ? order.total / 100 : undefined
     const currency = order.currency_code
@@ -29,28 +33,7 @@ export default function PurchaseTracking({ order }: PurchaseTrackingProps) {
     }))
     const contentIds = products.map((p) => p.id).filter(Boolean) as string[]
 
-    // RudderStack — backend CAPI also sends Order Completed via RudderStack Node SDK
-    try {
-      rudderAnalytics.track("Order Completed", {
-        order_id: order.id,
-        revenue,
-        currency,
-        products: orderItems.map((item) => ({
-          product_id: (item as any).product?.id,
-          sku: (item as any).variant?.sku,
-          name: item.product_title,
-          price: item.unit_price ? item.unit_price / 100 : undefined,
-          quantity: item.quantity,
-        })),
-        email: order.email,
-        event_id: eventId,
-      })
-    } catch {
-      // RudderStack failure — non-critical, backend CAPI will cover it
-    }
-
-    // Direct pixel SDKs — same eventId for platform deduplication
-    trackPixel("Purchase", {
+    trackPixel(platforms, "Purchase", {
       value: revenue,
       currency,
       content_ids: contentIds,
