@@ -12,12 +12,35 @@ const NG_STATES = [
   "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
 ]
 
+// Kenyan counties
+const KE_COUNTIES = [
+  "Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo-Marakwet", "Embu",
+  "Garissa", "Homa Bay", "Isiolo", "Kajiado", "Kakamega", "Kericho",
+  "Kiambu", "Kilifi", "Kirinyaga", "Kisii", "Kisumu", "Kitui", "Kwale",
+  "Laikipia", "Lamu", "Machakos", "Makueni", "Mandera", "Marsabit",
+  "Meru", "Migori", "Mombasa", "Murang'a", "Nairobi", "Nakuru", "Nandi",
+  "Narok", "Nyamira", "Nyandarua", "Nyeri", "Samburu", "Siaya",
+  "Taita-Taveta", "Tana River", "Tharaka-Nithi", "Trans-Nzoia", "Turkana",
+  "Uasin Gishu", "Vihiga", "Wajir", "West Pokot",
+]
+
+// Ghanaian regions
+const GH_REGIONS = [
+  "Ahafo", "Ashanti", "Bono", "Bono East", "Central", "Eastern",
+  "Greater Accra", "North East", "Northern", "Oti", "Savannah",
+  "Upper East", "Upper West", "Volta", "Western", "Western North",
+]
+
 const COUNTRY_STATES: Record<string, string[]> = {
   ng: NG_STATES,
+  ke: KE_COUNTIES,
+  gh: GH_REGIONS,
 }
 
 const COUNTRY_CODES: Record<string, string> = {
   ng: "+234",
+  ke: "+254",
+  gh: "+233",
 }
 
 const ShippingAddress = ({
