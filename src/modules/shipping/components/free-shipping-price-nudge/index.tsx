@@ -19,7 +19,17 @@ const computeTarget = (
 ) => {
   const priceRule = (price.price_rules || []).find(
     (pr) => pr.attribute === "item_total"
-  )!
+  )
+
+  if (!priceRule) {
+    return {
+      current_amount: 0,
+      target_amount: 0,
+      target_reached: false,
+      target_remaining: 0,
+      remaining_percentage: 0,
+    }
+  }
 
   const currentAmount = cart.item_total
   const targetAmount = parseFloat(priceRule.value)

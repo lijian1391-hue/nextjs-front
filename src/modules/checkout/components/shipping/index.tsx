@@ -343,7 +343,7 @@ const Shipping: React.FC<ShippingProps> = ({
                             </div>
                           </div>
                           <span className="justify-self-end text-ui-fg-base">
-                            <Price amount={option.amount!} currency_code={cart?.currency_code} />
+                            <Price amount={option.amount ?? 0} currency_code={cart?.currency_code} />
                           </span>
                         </Radio>
                       )
@@ -380,8 +380,8 @@ const Shipping: React.FC<ShippingProps> = ({
                   Method
                 </Text>
                 <Text className="txt-medium text-ui-fg-subtle">
-                  {cart.shipping_methods!.at(-1)!.name}{" "}
-                  <Price amount={cart.shipping_methods!.at(-1)!.amount!} currency_code={cart?.currency_code} />
+                  {cart.shipping_methods?.at(-1)?.name}{" "}
+                  <Price amount={cart.shipping_methods?.at(-1)?.amount} currency_code={cart?.currency_code} />
                 </Text>
               </div>
             )}

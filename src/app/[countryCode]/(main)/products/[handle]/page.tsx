@@ -30,7 +30,7 @@ const cachedListProducts = cache(
 export async function generateStaticParams() {
   try {
     const countryCodes = await listRegions().then((regions) =>
-      regions?.map((r) => r.countries?.map((c) => c.iso_2)).flat()
+      regions?.flatMap((r) => r.countries?.map((c) => c.iso_2) ?? []) ?? []
     )
 
     if (!countryCodes) {
@@ -99,16 +99,16 @@ function getImagesForVariant(
   selectedVariantId?: string
 ) {
   if (!product || !selectedVariantId || !product.variants) {
-    return product?.images ?? null
+    return product?.images ?? []
   }
 
-  const variant = product.variants!.find((v) => v.id === selectedVariantId)
-  if (!variant || !variant.images.length) {
-    return product.images
+  const variant = product.variants.find((v) => v.id === selectedVariantId)
+  if (!variant || !variant.images?.length) {
+    return product.images ?? []
   }
 
   const imageIdsMap = new Map(variant.images.map((i) => [i.id, true]))
-  return product.images!.filter((i) => imageIdsMap.has(i.id))
+  return (product.images ?? []).filter((i) => imageIdsMap.has(i.id))
 }
 
 export default async function ProductPage(props: Props) {
