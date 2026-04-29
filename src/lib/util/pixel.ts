@@ -271,37 +271,45 @@ export function trackPixelPageView(platforms: PixelPlatform[]) {
  *  4. Pixel config fetch helper
  * ================================================================ */
 
-const MEDUSA_URL = process.env.NEXT_PUBLIC_MEDUSA_URL || process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+const EMPTY_IDS: PixelIds = { meta_pixel_id: null, ga4_measurement_id: null, tiktok_pixel_id: null }
 
 let cachedPixelIds: PixelIds | null = null
 let fetchPromise: Promise<PixelIds> | null = null
 
 /**
- * Fetch pixel config from the Medusa store API.
- * Sales channel is resolved server-side from the publishable key.
- * Caches the result in memory; concurrent calls share one fetch.
+ * Server-side: fetch pixel config using MEDUSA_BACKEND_URL (only available on server).
+ * Use React.cache() to deduplicate within a single render pass.
  */
-export async function fetchPixelConfig(): Promise<PixelIds> {
+export async function fetchPixelConfigServer(): Promise<PixelIds> {
   if (cachedPixelIds) return cachedPixelIds
   if (fetchPromise) return fetchPromise
 
   fetchPromise = (async () => {
     try {
-      const res = await fetch(`${MEDUSA_URL}/store/pixel-config`)
+      const backendUrl = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+      const res = await fetch(`${backendUrl}/store/pixel-config`, {
+        cache: "no-store",
+      })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       cachedPixelIds = data.pixel_config as PixelIds
-      setPixelIds(cachedPixelIds)
       return cachedPixelIds
-    } catch (error) {
-      console.error("[pixel] Failed to fetch pixel config:", error)
-      return { meta_pixel_id: null, ga4_measurement_id: null, tiktok_pixel_id: null }
+    } catch {
+      return EMPTY_IDS
     } finally {
       fetchPromise = null
     }
   })()
 
   return fetchPromise
+}
+
+/**
+ * Client-side: accept pixel IDs from server props (no runtime fetch needed).
+ * Also initializes the global pixelIds state for loadPlatforms/trackPixel.
+ */
+export function initPixelIds(ids: PixelIds) {
+  setPixelIds(ids)
 }
 
 /**

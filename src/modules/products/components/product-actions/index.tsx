@@ -11,7 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileCtaBar from "../mobile-cta-bar"
 import { useRouter } from "next/navigation"
-import { trackPixel, loadPlatforms, parsePlatforms, fetchPixelConfig, type PixelPlatform } from "@lib/util/pixel"
+import { trackPixel, loadPlatforms, parsePlatforms, initPixelIds, type PixelPlatform, type PixelIds } from "@lib/util/pixel"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -19,6 +19,8 @@ type ProductActionsProps = {
   disabled?: boolean
   /** Initial variant ID from URL searchParams.v_id, passed from server to avoid extra render */
   initialVariantId?: string
+  /** Pixel IDs fetched server-side, no runtime API call needed */
+  pixelIds?: PixelIds
 }
 
 const optionsAsKeymap = (
@@ -34,6 +36,7 @@ export default function ProductActions({
   product,
   disabled,
   initialVariantId,
+  pixelIds,
 }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -42,10 +45,10 @@ export default function ProductActions({
   const viewedRef = useRef(false)
   const isAddingRef = useRef(false)
 
-  // Fetch pixel config on mount (sales channel resolved server-side)
+  // Initialize pixel IDs from server-side props (no runtime fetch)
   useEffect(() => {
-    fetchPixelConfig()
-  }, [])
+    if (pixelIds) initPixelIds(pixelIds)
+  }, [pixelIds])
 
   // Initialize options from initialVariantId; fall back to first variant if no v_id in URL
   const getInitialOptions = (): Record<string, string | undefined> => {

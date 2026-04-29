@@ -1,5 +1,6 @@
 import { HttpTypes } from "@medusajs/types"
 import ProductActions from "@modules/products/components/product-actions"
+import { fetchPixelConfigServer, type PixelIds } from "@lib/util/pixel"
 
 type Props = {
   product: HttpTypes.StoreProduct
@@ -8,10 +9,6 @@ type Props = {
   initialVariantId?: string
 }
 
-/**
- * Passes real-time product data to the client-side ProductActions component.
- * The product is fetched once in page.tsx to avoid duplicate API calls.
- */
 export default async function ProductActionsWrapper({
   product,
   region,
@@ -21,11 +18,19 @@ export default async function ProductActionsWrapper({
     return null
   }
 
+  let pixelIds: PixelIds | undefined
+  try {
+    pixelIds = await fetchPixelConfigServer()
+  } catch {
+    // Pixel tracking is optional — continue without it
+  }
+
   return (
     <ProductActions
       product={product}
       region={region}
       initialVariantId={initialVariantId}
+      pixelIds={pixelIds}
     />
   )
 }
