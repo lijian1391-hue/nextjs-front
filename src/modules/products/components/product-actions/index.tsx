@@ -88,9 +88,19 @@ export default function ProductActions({
     if (viewedRef.current || !selectedVariant) return
     viewedRef.current = true
 
+    console.log("[pixel-debug] pixelIds prop:", pixelIds)
+    console.log("[pixel-debug] product.metadata:", JSON.stringify(product.metadata))
     if (pixelIds) initPixelIds(pixelIds)
     const platforms = parsePlatforms(product.metadata)
-    if (platforms.length) loadPlatforms(platforms)
+    console.log("[pixel-debug] platforms:", platforms)
+    if (platforms.length) {
+      console.log("[pixel-debug] calling loadPlatforms...")
+      loadPlatforms(platforms).then(() => {
+        console.log("[pixel-debug] loadPlatforms done, window.fbq:", typeof (window as any).fbq)
+      })
+    } else {
+      console.log("[pixel-debug] platforms empty, skipping loadPlatforms")
+    }
 
     const price = (selectedVariant as any)?.calculated_price?.calculated_amount
     const currencyCode = (selectedVariant as any)?.calculated_price?.currency_code
