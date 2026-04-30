@@ -1,11 +1,10 @@
 import { HttpTypes } from "@medusajs/types"
 import ProductActions from "@modules/products/components/product-actions"
-import { fetchPixelConfigServer, type PixelIds } from "@lib/util/pixel"
+import { fetchPixelConfigServer, resolvePlatforms, type PixelIds, type PixelPlatform } from "@lib/util/pixel"
 
 type Props = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
-  /** The initial variant ID from URL searchParams.v_id */
   initialVariantId?: string
 }
 
@@ -25,12 +24,17 @@ export default async function ProductActionsWrapper({
     // Pixel tracking is optional — continue without it
   }
 
+  const pixelPlatforms: PixelPlatform[] = pixelIds
+    ? resolvePlatforms(product.metadata, pixelIds)
+    : []
+
   return (
     <ProductActions
       product={product}
       region={region}
       initialVariantId={initialVariantId}
       pixelIds={pixelIds}
+      pixelPlatforms={pixelPlatforms}
     />
   )
 }

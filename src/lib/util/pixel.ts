@@ -164,6 +164,7 @@ async function loadTikTok(pixelId: string) {
       ttq._i[id] = []
       ttq._i[id]._u = "https://analytics.tiktok.com/i18n/pixel/events.js"
       ttq.setAndDefer(ttq._i[id], "init")
+      ttq.setAndDefer(ttq._i[id], "setPixelId")
     }
     w.ttq = ttq
   }
@@ -344,7 +345,6 @@ export function initPixelIds(ids: PixelIds) {
 
 /**
  * Derive which platforms have configured IDs.
- * Used as fallback when product.metadata is not available on client.
  */
 export function getPlatformsFromIds(ids: PixelIds): PixelPlatform[] {
   const platforms: PixelPlatform[] = []
@@ -352,6 +352,19 @@ export function getPlatformsFromIds(ids: PixelIds): PixelPlatform[] {
   if (ids.ga4_measurement_id) platforms.push("ga4")
   if (ids.tiktok_pixel_id) platforms.push("tiktok")
   return platforms
+}
+
+/**
+ * Intersect product-requested platforms with globally configured pixel IDs.
+ * Called in server components where product.metadata is available.
+ */
+export function resolvePlatforms(
+  metadata: Record<string, unknown> | null | undefined,
+  ids: PixelIds
+): PixelPlatform[] {
+  const requested = parsePlatforms(metadata)
+  if (!requested.length) return []
+  return getPlatformsFromIds(ids).filter((p) => requested.includes(p))
 }
 
 /**

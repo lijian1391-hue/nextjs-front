@@ -11,7 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileCtaBar from "../mobile-cta-bar"
 import { useRouter } from "next/navigation"
-import { trackPixel, loadPlatforms, getPlatformsFromIds, initPixelIds, type PixelPlatform, type PixelIds } from "@lib/util/pixel"
+import { trackPixel, loadPlatforms, initPixelIds, type PixelPlatform, type PixelIds } from "@lib/util/pixel"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -19,8 +19,10 @@ type ProductActionsProps = {
   disabled?: boolean
   /** Initial variant ID from URL searchParams.v_id, passed from server to avoid extra render */
   initialVariantId?: string
-  /** Pixel IDs fetched server-side, no runtime API call needed */
+  /** Pixel IDs fetched server-side */
   pixelIds?: PixelIds
+  /** Platforms resolved from product.metadata ∩ pixelIds, computed server-side */
+  pixelPlatforms?: PixelPlatform[]
 }
 
 const optionsAsKeymap = (
@@ -37,6 +39,7 @@ export default function ProductActions({
   disabled,
   initialVariantId,
   pixelIds,
+  pixelPlatforms,
 }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -89,7 +92,7 @@ export default function ProductActions({
     viewedRef.current = true
 
     if (pixelIds) initPixelIds(pixelIds)
-    const platforms = pixelIds ? getPlatformsFromIds(pixelIds) : []
+    const platforms = pixelPlatforms ?? []
     if (platforms.length) loadPlatforms(platforms)
 
     const price = (selectedVariant as any)?.calculated_price?.calculated_amount
@@ -176,7 +179,7 @@ export default function ProductActions({
     })
 
     if (pixelIds) initPixelIds(pixelIds)
-    const platforms = pixelIds ? getPlatformsFromIds(pixelIds) : []
+    const platforms = pixelPlatforms ?? []
     const addEventId = `${variantId}_AddToCart_${Date.now()}`
 
     trackPixel(platforms, "AddToCart", {

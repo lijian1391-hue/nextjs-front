@@ -1,23 +1,27 @@
 "use client"
 
-import { trackPixel, loadPlatforms, type PixelPlatform } from "@lib/util/pixel"
+import { trackPixel, loadPlatforms, getPlatformsFromIds, initPixelIds, type PixelPlatform, type PixelIds } from "@lib/util/pixel"
 import { HttpTypes } from "@medusajs/types"
 import { useEffect, useRef } from "react"
 
 type PurchaseTrackingProps = {
   order: HttpTypes.StoreOrder
+  pixelIds?: PixelIds
 }
 
-export default function PurchaseTracking({ order }: PurchaseTrackingProps) {
+export default function PurchaseTracking({ order, pixelIds }: PurchaseTrackingProps) {
   const trackedRef = useRef(false)
 
   useEffect(() => {
     if (trackedRef.current) return
     trackedRef.current = true
 
-    // Purchase is a critical conversion event — fire to all loaded platforms
-    // regardless of per-product pixel_platforms (which only controls page-level SDK loading)
-    const platforms: PixelPlatform[] = ["meta", "ga4", "tiktok"]
+    if (!pixelIds) return
+    initPixelIds(pixelIds)
+
+    const platforms = getPlatformsFromIds(pixelIds)
+    if (!platforms.length) return
+
     loadPlatforms(platforms)
 
     const eventId = `${order.id}_Purchase`
@@ -45,7 +49,7 @@ export default function PurchaseTracking({ order }: PurchaseTrackingProps) {
       })),
       num_items: orderItems.reduce((sum, i) => sum + (i.quantity || 0), 0),
     }, eventId)
-  }, [order.id])
+  }, [order.id, pixelIds])
 
   return null
 }
