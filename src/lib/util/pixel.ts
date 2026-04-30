@@ -144,37 +144,15 @@ async function loadTikTok(pixelId: string) {
   const w = window as any
   w.TiktokAnalyticsObject = "ttq"
 
-  if (!w.ttq) {
-    const ttq: any = []
-    ttq.methods = [
-      "page", "track", "identify", "instances", "debug",
-      "on", "off", "once", "ready", "alias", "group",
-      "enableCookie", "disableCookie",
-    ]
-    ttq.setAndDefer = function (t: any, e: string) {
-      t[e] = function () {
-        t.push([e].concat(Array.prototype.slice.call(arguments, 0)))
-      }
-    }
-    for (let i = 0; i < ttq.methods.length; i++) {
-      ttq.setAndDefer(ttq, ttq.methods[i])
-    }
-    ttq.load = function (id: string) {
-      ttq._i = ttq._i || {}
-      ttq._i[id] = []
-      ttq._i[id]._u = "https://analytics.tiktok.com/i18n/pixel/events.js"
-      ttq.setAndDefer(ttq._i[id], "init")
-      ttq.setAndDefer(ttq._i[id], "setPixelId")
-    }
-    w.ttq = ttq
-  }
-
-  w.ttq.load(pixelId)
-  w.ttq.page()
   await loadScript(
     "https://analytics.tiktok.com/i18n/pixel/events.js",
     "ttq-sdk"
   )
+
+  if (w.ttq) {
+    w.ttq.load(pixelId)
+    w.ttq.page()
+  }
 }
 
 /**
@@ -237,7 +215,7 @@ function gaTrack(event: string, data: PixelEventData) {
 
 function ttqTrack(event: string, data: PixelEventData, eventId: string) {
   const w = window as any
-  if (typeof w.ttq === "function") {
+  if (w.ttq && typeof w.ttq.track === "function") {
     w.ttq.track(event, data, { event_id: eventId })
   }
 }
@@ -289,7 +267,7 @@ export function trackPixelPageView(platforms: PixelPlatform[]) {
   if (platforms.includes("ga4") && typeof w.gtag === "function") {
     w.gtag("event", "page_view", { send_to: pixelIds.ga4_measurement_id })
   }
-  if (platforms.includes("tiktok") && typeof w.ttq === "function") {
+  if (platforms.includes("tiktok") && w.ttq && typeof w.ttq.page === "function") {
     w.ttq.page()
   }
 }
