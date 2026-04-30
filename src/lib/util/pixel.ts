@@ -317,6 +317,18 @@ export function initPixelIds(ids: PixelIds) {
 }
 
 /**
+ * Derive which platforms have configured IDs.
+ * Used as fallback when product.metadata is not available on client.
+ */
+export function getPlatformsFromIds(ids: PixelIds): PixelPlatform[] {
+  const platforms: PixelPlatform[] = []
+  if (ids.meta_pixel_id) platforms.push("meta")
+  if (ids.ga4_measurement_id) platforms.push("ga4")
+  if (ids.tiktok_pixel_id) platforms.push("tiktok")
+  return platforms
+}
+
+/**
  * Parse pixel_platforms from product metadata into typed array.
  * Returns empty array if no platforms configured.
  */

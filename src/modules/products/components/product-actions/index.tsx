@@ -11,7 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileCtaBar from "../mobile-cta-bar"
 import { useRouter } from "next/navigation"
-import { trackPixel, loadPlatforms, parsePlatforms, initPixelIds, type PixelPlatform, type PixelIds } from "@lib/util/pixel"
+import { trackPixel, loadPlatforms, getPlatformsFromIds, initPixelIds, type PixelPlatform, type PixelIds } from "@lib/util/pixel"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -88,19 +88,9 @@ export default function ProductActions({
     if (viewedRef.current || !selectedVariant) return
     viewedRef.current = true
 
-    console.log("[pixel-debug] pixelIds prop:", pixelIds)
-    console.log("[pixel-debug] product.metadata:", JSON.stringify(product.metadata))
     if (pixelIds) initPixelIds(pixelIds)
-    const platforms = parsePlatforms(product.metadata)
-    console.log("[pixel-debug] platforms:", platforms)
-    if (platforms.length) {
-      console.log("[pixel-debug] calling loadPlatforms...")
-      loadPlatforms(platforms).then(() => {
-        console.log("[pixel-debug] loadPlatforms done, window.fbq:", typeof (window as any).fbq)
-      })
-    } else {
-      console.log("[pixel-debug] platforms empty, skipping loadPlatforms")
-    }
+    const platforms = pixelIds ? getPlatformsFromIds(pixelIds) : []
+    if (platforms.length) loadPlatforms(platforms)
 
     const price = (selectedVariant as any)?.calculated_price?.calculated_amount
     const currencyCode = (selectedVariant as any)?.calculated_price?.currency_code
@@ -185,9 +175,8 @@ export default function ProductActions({
       }
     })
 
-    // Ensure pixel IDs are initialized (safe to call multiple times)
     if (pixelIds) initPixelIds(pixelIds)
-    const platforms = parsePlatforms(product.metadata)
+    const platforms = pixelIds ? getPlatformsFromIds(pixelIds) : []
     const addEventId = `${variantId}_AddToCart_${Date.now()}`
 
     trackPixel(platforms, "AddToCart", {
