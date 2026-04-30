@@ -45,11 +45,6 @@ export default function ProductActions({
   const viewedRef = useRef(false)
   const isAddingRef = useRef(false)
 
-  // Initialize pixel IDs from server-side props (no runtime fetch)
-  useEffect(() => {
-    if (pixelIds) initPixelIds(pixelIds)
-  }, [pixelIds])
-
   // Initialize options from initialVariantId; fall back to first variant if no v_id in URL
   const getInitialOptions = (): Record<string, string | undefined> => {
     if (initialVariantId && product.variants?.length) {
@@ -93,6 +88,7 @@ export default function ProductActions({
     if (viewedRef.current || !selectedVariant) return
     viewedRef.current = true
 
+    if (pixelIds) initPixelIds(pixelIds)
     const platforms = parsePlatforms(product.metadata)
     if (platforms.length) loadPlatforms(platforms)
 
@@ -179,7 +175,8 @@ export default function ProductActions({
       }
     })
 
-    // Track events immediately
+    // Ensure pixel IDs are initialized (safe to call multiple times)
+    if (pixelIds) initPixelIds(pixelIds)
     const platforms = parsePlatforms(product.metadata)
     const addEventId = `${variantId}_AddToCart_${Date.now()}`
 
