@@ -104,17 +104,23 @@ function loadScript(src: string, id: string): Promise<void> {
 
 async function loadMeta(pixelId: string) {
   const w = window as any
-  w.fbq =
-    w.fbq ||
-    function (...args: any[]) {
-      ;(w.fbq.queue = w.fbq.queue || []).push(args)
-    }
-  w.fbq("init", pixelId)
-  w.fbq("track", "PageView")
+  if (w.fbq) return
+
+  const fbq = function (...args: any[]) {
+    ;(fbq.queue = fbq.queue || []).push(args)
+  }
+  fbq.push = fbq
+  fbq.loaded = true
+  fbq.version = "2.0"
+  fbq.queue = []
+  w.fbq = fbq
+
   await loadScript(
-    `https://connect.facebook.net/en_US/fbevents.js`,
+    "https://connect.facebook.net/en_US/fbevents.js",
     "fb-pixel-sdk"
   )
+  w.fbq("init", pixelId)
+  w.fbq("track", "PageView")
 }
 
 async function loadGA4(measurementId: string) {
@@ -134,18 +140,29 @@ async function loadGA4(measurementId: string) {
 async function loadTikTok(pixelId: string) {
   const w = window as any
   w.TiktokAnalyticsObject = "ttq"
-  w.ttq =
-    w.ttq ||
-    function (...args: any[]) {
-      ;(w.ttq.methods = w.ttq.methods || []).push(args)
+
+  if (!w.ttq) {
+    const ttq: any = []
+    ttq.methods = [
+      "page", "track", "identify", "instances", "debug",
+      "on", "off", "once", "ready", "alias", "group",
+      "enableCookie", "disableCookie",
+    ]
+    ttq.setAndDefer = function (t: any, e: string) {
+      t[e] = function () {
+        t.push([e].concat(Array.prototype.slice.call(arguments, 0)))
+      }
     }
-  w.ttq.load = function (id: string) {
-    w.ttq._i = id
+    for (let i = 0; i < ttq.methods.length; i++) {
+      ttq.setAndDefer(ttq, ttq.methods[i])
+    }
+    w.ttq = ttq
   }
+
   w.ttq.load(pixelId)
   w.ttq.page()
   await loadScript(
-    `https://analytics.tiktok.com/i18n/pixel/events.js`,
+    "https://analytics.tiktok.com/i18n/pixel/events.js",
     "ttq-sdk"
   )
 }
