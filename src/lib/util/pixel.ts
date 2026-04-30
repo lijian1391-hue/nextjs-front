@@ -106,21 +106,24 @@ async function loadMeta(pixelId: string) {
   const w = window as any
   if (w.fbq) return
 
-  const fbq = function (...args: any[]) {
-    ;(fbq.queue = fbq.queue || []).push(args)
+  const n = w.fbq = function (...args: any[]) {
+    n.callMethod
+      ? n.callMethod.apply(n, args)
+      : n.queue.push(args)
   }
-  fbq.push = fbq
-  fbq.loaded = true
-  fbq.version = "2.0"
-  fbq.queue = []
-  w.fbq = fbq
+  w._fbq = n
+  n.push = n
+  n.loaded = true
+  n.version = "2.0"
+  n.queue = []
+
+  n("init", pixelId)
+  n("track", "PageView")
 
   await loadScript(
     "https://connect.facebook.net/en_US/fbevents.js",
     "fb-pixel-sdk"
   )
-  w.fbq("init", pixelId)
-  w.fbq("track", "PageView")
 }
 
 async function loadGA4(measurementId: string) {
@@ -155,6 +158,12 @@ async function loadTikTok(pixelId: string) {
     }
     for (let i = 0; i < ttq.methods.length; i++) {
       ttq.setAndDefer(ttq, ttq.methods[i])
+    }
+    ttq.load = function (id: string) {
+      ttq._i = ttq._i || {}
+      ttq._i[id] = []
+      ttq._i[id]._u = "https://analytics.tiktok.com/i18n/pixel/events.js"
+      ttq.setAndDefer(ttq._i[id], "init")
     }
     w.ttq = ttq
   }
