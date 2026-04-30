@@ -287,8 +287,12 @@ export async function fetchPixelConfigServer(): Promise<PixelIds> {
   fetchPromise = (async () => {
     try {
       const backendUrl = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+      const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
       const res = await fetch(`${backendUrl}/store/pixel-config`, {
         cache: "no-store",
+        headers: {
+          "x-publishable-api-key": publishableKey,
+        },
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
