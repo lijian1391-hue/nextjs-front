@@ -142,12 +142,41 @@ async function loadGA4(measurementId: string) {
 
 async function loadTikTok(pixelId: string) {
   const w = window as any
-  w.TiktokAnalyticsObject = "ttq"
-  if (!w.ttq) w.ttq = []
+  const t = "ttq"
+  w.TiktokAnalyticsObject = t
+  if (!w[t]) {
+    const ttq: any = w[t] = []
+    ttq.methods = [
+      "page", "track", "identify", "instances", "debug",
+      "on", "off", "once", "ready", "alias", "group",
+      "enableCookie", "disableCookie",
+    ]
+    ttq.setAndDefer = function (o: any, e: string) {
+      o[e] = function () {
+        o.push([e].concat(Array.prototype.slice.call(arguments, 0)))
+      }
+    }
+    for (let i = 0; i < ttq.methods.length; i++) {
+      ttq.setAndDefer(ttq, ttq.methods[i])
+    }
+    ttq.instance = function (id: string) {
+      const inst: any = []
+      for (let i = 0; i < ttq.methods.length; i++) {
+        ttq.setAndDefer(inst, ttq.methods[i])
+      }
+      return inst
+    }
+    ttq.load = function (id: string) {
+      ttq._i = ttq._i || {}
+      ttq._i[id] = ttq.instance(id)
+      ttq._i[id]._u = "https://analytics.tiktok.com/i18n/pixel/events.js"
+      ttq.setAndDefer(ttq._i[id], "init")
+      ttq.setAndDefer(ttq._i[id], "setPixelId")
+    }
+  }
 
-  // Queue load + page in the stub so SDK processes them during init
-  w.ttq.push(["load", pixelId])
-  w.ttq.push(["page"])
+  w[t].load(pixelId)
+  w[t].page()
 
   await loadScript(
     "https://analytics.tiktok.com/i18n/pixel/events.js",
