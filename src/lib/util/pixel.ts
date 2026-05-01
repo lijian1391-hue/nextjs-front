@@ -143,16 +143,16 @@ async function loadGA4(measurementId: string) {
 async function loadTikTok(pixelId: string) {
   const w = window as any
   w.TiktokAnalyticsObject = "ttq"
+  if (!w.ttq) w.ttq = []
+
+  // Queue load + page in the stub so SDK processes them during init
+  w.ttq.push(["load", pixelId])
+  w.ttq.push(["page"])
 
   await loadScript(
     "https://analytics.tiktok.com/i18n/pixel/events.js",
     "ttq-sdk"
   )
-
-  if (w.ttq) {
-    w.ttq.load(pixelId)
-    w.ttq.page()
-  }
 }
 
 /**
