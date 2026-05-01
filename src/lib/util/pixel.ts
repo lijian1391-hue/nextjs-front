@@ -159,29 +159,27 @@ async function loadTikTok(pixelId: string) {
     for (let i = 0; i < ttq.methods.length; i++) {
       ttq.setAndDefer(ttq, ttq.methods[i])
     }
-    ttq.instance = function (id: string) {
-      const inst: any = []
-      for (let i = 0; i < ttq.methods.length; i++) {
-        ttq.setAndDefer(inst, ttq.methods[i])
-      }
-      return inst
-    }
+    // Official load: creates its own script tag with sdkid in URL
     ttq.load = function (id: string) {
+      const src = "https://analytics.tiktok.com/i18n/pixel/events.js"
       ttq._i = ttq._i || {}
-      ttq._i[id] = ttq.instance(id)
-      ttq._i[id]._u = "https://analytics.tiktok.com/i18n/pixel/events.js"
-      ttq.setAndDefer(ttq._i[id], "init")
-      ttq.setAndDefer(ttq._i[id], "setPixelId")
+      ttq._i[id] = []
+      ttq._i[id]._u = src
+      ttq._t = ttq._t || {}
+      ttq._t[id] = +new Date()
+      ttq._o = ttq._o || {}
+      ttq._o[id] = {}
+      const s = document.createElement("script")
+      s.type = "text/javascript"
+      s.async = true
+      s.src = src + "?sdkid=" + encodeURIComponent(id) + "&lib=ttq"
+      const first = document.getElementsByTagName("script")[0]
+      first.parentNode!.insertBefore(s, first)
     }
   }
 
   w[t].load(pixelId)
   w[t].page()
-
-  await loadScript(
-    "https://analytics.tiktok.com/i18n/pixel/events.js",
-    "ttq-sdk"
-  )
 }
 
 /**
@@ -308,14 +306,16 @@ export function trackPixelPageView(platforms: PixelPlatform[]) {
 const EMPTY_IDS: PixelIds = { meta_pixel_id: null, ga4_measurement_id: null, tiktok_pixel_id: null }
 
 let cachedPixelIds: PixelIds | null = null
+let cachedAt = 0
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 let fetchPromise: Promise<PixelIds> | null = null
 
 /**
  * Server-side: fetch pixel config using MEDUSA_BACKEND_URL (only available on server).
- * Use React.cache() to deduplicate within a single render pass.
+ * Cached for 5 minutes so admin updates propagate without redeploy.
  */
 export async function fetchPixelConfigServer(): Promise<PixelIds> {
-  if (cachedPixelIds) return cachedPixelIds
+  if (cachedPixelIds && Date.now() - cachedAt < CACHE_TTL) return cachedPixelIds
   if (fetchPromise) return fetchPromise
 
   fetchPromise = (async () => {
@@ -331,6 +331,7 @@ export async function fetchPixelConfigServer(): Promise<PixelIds> {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       cachedPixelIds = data.pixel_config as PixelIds
+      cachedAt = Date.now()
       return cachedPixelIds
     } catch {
       return EMPTY_IDS
