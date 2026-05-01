@@ -282,11 +282,18 @@ export async function quickOrder({
     throw new Error(`Region not found for country code: ${countryCode}`)
   }
 
-  // 3. Create fresh cart
+  // 3. Create fresh cart with client_id in metadata
   const headers = { ...(await getAuthHeaders()) }
   const locale = await getLocale()
+  const { cookies: nextCookies } = await import("next/headers")
+  const cookieJar = await nextCookies()
+  const clientId = cookieJar.get("_medusa_ga_cid")?.value || ""
   const { cart } = await sdk.store.cart.create(
-    { region_id: region.id, locale: locale || undefined },
+    {
+      region_id: region.id,
+      locale: locale || undefined,
+      metadata: clientId ? { ga_client_id: clientId } : undefined,
+    },
     {},
     headers
   )

@@ -86,6 +86,37 @@ function drainQueue() {
  *  1. SDK bootstrap — lazy, per-platform
  * ================================================================ */
 
+/**
+ * Get or create a persistent client_id for GA4 session matching.
+ * Reads from _ga cookie if gtag already loaded, otherwise generates a UUID.
+ * Stored in _medusa_ga_cid cookie (730 days) so both browser and server
+ * (via cart metadata) use the same identifier.
+ */
+export function getOrCreateClientId(): string {
+  if (typeof window === "undefined") return ""
+
+  const stored = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith("_medusa_ga_cid="))
+    ?.split("=")[1]
+  if (stored) return stored
+
+  let clientId: string
+  const gaCookie = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith("_ga="))
+    ?.split("=")[1]
+  if (gaCookie) {
+    const parts = gaCookie.split(".")
+    clientId = parts.length >= 4 ? parts.slice(-2).join(".") : gaCookie
+  } else {
+    clientId = crypto.randomUUID().replace(/-/g, "")
+  }
+
+  document.cookie = `_medusa_ga_cid=${clientId};max-age=${730 * 86400};path=/;SameSite=Lax`
+  return clientId
+}
+
 function loadScript(src: string, id: string): Promise<void> {
   return new Promise((resolve) => {
     if (document.getElementById(id)) {
@@ -133,7 +164,11 @@ async function loadGA4(measurementId: string) {
     w.dataLayer.push(args)
   }
   w.gtag("js", new Date())
-  w.gtag("config", measurementId, { send_page_view: false })
+  const clientId = getOrCreateClientId()
+  w.gtag("config", measurementId, {
+    send_page_view: false,
+    client_id: clientId,
+  })
   await loadScript(
     `https://www.googletagmanager.com/gtag/js?id=${measurementId}`,
     "gtag-sdk"
