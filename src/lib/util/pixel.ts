@@ -243,7 +243,12 @@ function gaTrack(event: string, data: PixelEventData) {
 function ttqTrack(event: string, data: PixelEventData, eventId: string) {
   const w = window as any
   if (w.ttq && typeof w.ttq.track === "function") {
-    w.ttq.track(event, data, { event_id: eventId })
+    // TikTok uses content_id (singular), not content_ids (Meta's name)
+    const ttqData = { ...data }
+    if (!ttqData.content_id && ttqData.content_ids) {
+      ttqData.content_id = ttqData.content_ids
+    }
+    w.ttq.track(event, ttqData, { event_id: eventId })
   }
 }
 
