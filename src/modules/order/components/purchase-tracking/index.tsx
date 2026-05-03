@@ -25,7 +25,7 @@ export default function PurchaseTracking({ order, pixelIds }: PurchaseTrackingPr
     loadPlatforms(platforms)
 
     const eventId = `${order.id}_Purchase`
-    const revenue = order.total ? order.total / 100 : undefined
+    const revenue = (order as any).total ? (order as any).total / 100 : undefined
     const currency = order.currency_code
     const orderItems = order.items ?? []
     const products = orderItems.map((item) => ({
