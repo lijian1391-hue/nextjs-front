@@ -56,8 +56,8 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
         >
           <Text className="txt-medium-plus text-ui-fg-base mb-1">Method</Text>
           <Text className="txt-medium text-ui-fg-subtle">
-            {(order as any).shipping_methods[0]?.name} (
-            <Price amount={order.shipping_methods?.[0].total ?? 0} currency_code={order.currency_code} />
+            {(order as any).shipping_methods?.[0]?.name} (
+            <Price amount={order.shipping_methods?.[0]?.total ?? 0} currency_code={order.currency_code} />
             )
           </Text>
         </div>
