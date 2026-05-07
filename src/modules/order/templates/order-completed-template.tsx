@@ -2,7 +2,6 @@ import { Heading } from "@medusajs/ui"
 import { cookies as nextCookies } from "next/headers"
 
 import CartTotals from "@modules/common/components/cart-totals"
-import Help from "@modules/order/components/help"
 import Items from "@modules/order/components/items"
 import OnboardingCta from "@modules/order/components/onboarding-cta"
 import OrderDetails from "@modules/order/components/order-details"
@@ -55,7 +54,19 @@ export default async function OrderCompletedTemplate({
           {process.env.NEXT_PUBLIC_WHATSAPP_NUMBER && (
             <WhatsAppContact order={order} />
           )}
-          <Help />
+          <div className="mt-6 p-5 rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-300 shadow-sm">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl shrink-0 mt-0.5">✅</span>
+              <div>
+                <p className="text-lg font-bold text-emerald-800 leading-snug">
+                  ORDER RESERVED
+                </p>
+                <p className="text-base text-emerald-700 mt-1.5 leading-relaxed">
+                  Our agent will call you later to verify your delivery address. Please answer to ensure successful shipping! 📞🚀
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
